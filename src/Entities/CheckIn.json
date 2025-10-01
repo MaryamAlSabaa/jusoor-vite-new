@@ -1,0 +1,53 @@
+{
+  "name": "CheckIn",
+  "type": "object",
+  "properties": {
+    "fatigue_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Fatigue level on a scale of 0-10"
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "very_sad",
+        "sad",
+        "neutral",
+        "happy",
+        "very_happy"
+      ],
+      "description": "User's mood"
+    },
+    "mobility": {
+      "type": "string",
+      "enum": [
+        "independent",
+        "uses_aid",
+        "wheelchair",
+        "needs_assistance"
+      ],
+      "description": "Mobility status"
+    },
+    "pain_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Pain level on a scale of 0-10"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes from the check-in"
+    },
+    "check_in_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the check-in"
+    }
+  },
+  "required": [
+    "fatigue_level",
+    "mood",
+    "check_in_date"
+  ]
+}

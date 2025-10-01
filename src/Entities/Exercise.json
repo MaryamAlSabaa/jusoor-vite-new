@@ -1,0 +1,97 @@
+{
+  "name": "Exercise",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Exercise name"
+    },
+    "title_ar": {
+      "type": "string",
+      "description": "Exercise name in Arabic"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description"
+    },
+    "description_ar": {
+      "type": "string",
+      "description": "Description in Arabic"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Duration in minutes"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "description": "Difficulty level"
+    },
+    "mobility_requirement": {
+      "type": "string",
+      "enum": [
+        "independent",
+        "seated",
+        "wheelchair",
+        "assisted"
+      ],
+      "description": "Required mobility level"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Step-by-step instructions"
+    },
+    "steps_ar": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Steps in Arabic"
+    },
+    "contraindications": {
+      "type": "string",
+      "description": "Safety warnings and contraindications"
+    },
+    "contraindications_ar": {
+      "type": "string",
+      "description": "Contraindications in Arabic"
+    },
+    "equipment_needed": {
+      "type": "string",
+      "description": "Required equipment"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "URL to demonstration video"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL to exercise image"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "stretching",
+        "balance",
+        "strength",
+        "cardio",
+        "breathing"
+      ],
+      "description": "Exercise category"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "duration_minutes",
+    "mobility_requirement",
+    "steps"
+  ]
+}

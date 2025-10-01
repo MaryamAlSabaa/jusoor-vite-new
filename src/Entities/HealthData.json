@@ -1,0 +1,54 @@
+{
+  "name": "HealthData",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the health data"
+    },
+    "steps": {
+      "type": "number",
+      "description": "Number of steps"
+    },
+    "active_minutes": {
+      "type": "number",
+      "description": "Active minutes"
+    },
+    "heart_rate_avg": {
+      "type": "number",
+      "description": "Average heart rate"
+    },
+    "heart_rate_resting": {
+      "type": "number",
+      "description": "Resting heart rate"
+    },
+    "sleep_hours": {
+      "type": "number",
+      "description": "Hours of sleep"
+    },
+    "sleep_quality": {
+      "type": "string",
+      "enum": [
+        "poor",
+        "fair",
+        "good",
+        "excellent"
+      ],
+      "description": "Sleep quality"
+    },
+    "data_source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "healthkit",
+        "google_fit",
+        "fitbit"
+      ],
+      "description": "Source of the data"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

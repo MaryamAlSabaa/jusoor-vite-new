@@ -1,0 +1,49 @@
+{
+  "name": "Journal",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the journal entry"
+    },
+    "transcript": {
+      "type": "string",
+      "description": "Voice transcription or text entry"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "URL to the audio recording"
+    },
+    "emotion_tag": {
+      "type": "string",
+      "enum": [
+        "calm",
+        "stressed",
+        "sad",
+        "hopeful",
+        "anxious",
+        "grateful",
+        "neutral"
+      ],
+      "description": "Emotional tone of the entry"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "ar"
+      ],
+      "default": "en",
+      "description": "Language of the entry"
+    },
+    "entry_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the journal entry"
+    }
+  },
+  "required": [
+    "transcript",
+    "entry_date"
+  ]
+}
