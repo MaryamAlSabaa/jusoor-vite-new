@@ -51,6 +51,30 @@ export default function Home() {
     }
   };
 
+  /*const loadData = async () => {
+  try {
+    // Fake user
+    const userData = { full_name: "Test User", email: "test@example.com", language_preference: "en" };
+    setUser(userData);
+    setIsRTL(userData.language_preference === "ar");
+
+    // Fake today's check-in
+    setTodayCheckIn({
+      fatigue_level: 4,
+      mood: "happy",
+      pain_level: 2,
+    });
+
+    // Fake health data
+    setRecentHealth({
+      steps: 5230,
+      sleep_hours: 7,
+    });
+  } catch (error) {
+    console.error("Error loading data:", error);
+  }
+};*/
+
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return isRTL ? "صباح الخير" : "Good Morning";

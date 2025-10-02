@@ -8,6 +8,7 @@ import Journal from "./Pages/Journal.jsx";
 import HealthHistory from "./Pages/HealthHistory.jsx";
 import VoiceCheckIn from "./Pages/VoiceCheckIn.jsx";
 import Onboarding from "./Pages/Onboarding.jsx";
+import CheckIn from "./Pages/CheckIn.jsx";
 import Settings from "./Pages/Settings.jsx";
 
 export default function App() {
@@ -22,6 +23,8 @@ export default function App() {
           <Route path="health-history" element={<HealthHistory />} />
           <Route path="voice-check-in" element={<VoiceCheckIn />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="CheckIn" element={<CheckIn />} />
+
         </Route>
       </Routes>
   );
