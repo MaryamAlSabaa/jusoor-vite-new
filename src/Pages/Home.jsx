@@ -101,7 +101,21 @@ export default function Home() {
             </p>
           </Card>
         </Link>
-
+        <a data-linenumber="233" data-dynamic-content="true" class="block" href="/DoctorReport">
+          <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm 
+                  font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 
+                  focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 
+                  [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-background 
+                  hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full nabdh-button"  data-linenumber="234" data-dynamic-content="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2 w-4 h-4 mr-2 text-[var(--nabdh-primary)]" data-source-location="pages/Dashboard:235:10" data-dynamic-content="false">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                    <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
+                  </svg>Share Report
+          </button>
+        </a>
         {/* Today's Status */}
         {todayCheckIn ? (
           <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
@@ -208,7 +222,7 @@ export default function Home() {
             color={todayCheckIn ? "success" : "warning"}
           />
         </div>
-         {/* My Medications */}
+         {/* My Medications
       <section className="space-y-4">
         <h2 className={`text-lg font-semibold text-[var(--nabdh-secondary)] ${language === 'ar' ? 'arabic-font' : ''}`}>
           {getText('myMedications')}
@@ -230,7 +244,7 @@ export default function Home() {
       </section>
 
       {/* Upcoming Appointments */}
-      <section className="space-y-4">
+      {/* <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className={`text-lg font-semibold text-[var(--nabdh-secondary)] ${
             language === 'ar' ? 'arabic-font' : ''
@@ -273,7 +287,7 @@ export default function Home() {
                     color="info" 
                   />
                 );
-              }
+              } 
               return (
                 <AppointmentCard
                   key={appointment.id}
@@ -285,7 +299,7 @@ export default function Home() {
             })}
           </div>
         )}
-      </section>
+      </section> */}
 
         {/* Health Summary */}
         {recentHealth && (
