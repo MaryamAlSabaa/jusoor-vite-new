@@ -67,6 +67,40 @@ export function MedicationCard({ name, dosage, frequency, icon: Icon, color }) {
     </div>
   );
 }
+
+export const Switch = ({ checked, onCheckedChange, style = {}, ...props }) => {
+  const toggle = () => onCheckedChange && onCheckedChange(!checked);
+
+  return (
+    <div
+      onClick={toggle}
+      style={{
+        width: "40px",
+        height: "20px",
+        borderRadius: "20px",
+        backgroundColor: checked ? "#4ade80" : "#ccc",
+        position: "relative",
+        cursor: "pointer",
+        transition: "background-color 0.2s",
+        ...style,
+      }}
+      {...props}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "2px",
+          left: checked ? "22px" : "2px",
+          width: "16px",
+          height: "16px",
+          borderRadius: "50%",
+          background: "#fff",
+          transition: "left 0.2s",
+        }}
+      ></div>
+    </div>
+  );
+};
 export function HealthCard({ title, value, subtitle, icon: Icon, color }) {
   const colorMap = {
     primary: "bg-teal-500 text-white",

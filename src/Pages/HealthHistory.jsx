@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { HealthData } from "../Entities/HealthData";
-import { CheckIn } from "../Entities/CheckIn";
+import { checkIn } from "../Entities/CheckIn";
 import { Card } from "../components";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, Activity, Heart, Moon } from "lucide-react";
@@ -26,7 +26,7 @@ export default function HealthHistory() {
       const health = await HealthData.list("-date", 30);
       setHealthData(health);
 
-      const checkIns = await CheckIn.list("-check_in_date", 30);
+      const checkIns = await checkIn.list("-check_in_date", 30);
       setCheckInData(checkIns);
     } catch (error) {
       console.error("Error loading data:", error);

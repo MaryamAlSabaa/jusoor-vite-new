@@ -142,7 +142,8 @@ export default function Emergency() {
           </div>
 
           <div className="space-y-3">
-            {contacts.map((contact) => (
+            {Array.isArray(contacts) &&
+  contacts.map((contact) => (
               <a key={contact.id} href={`tel:${contact.phone}`}>
                 <Card className="p-6 cursor-pointer hover:shadow-lg transition-all" style={{ backgroundColor: "var(--surface)" }}>
                   <div className="flex items-center justify-between">

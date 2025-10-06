@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Exercise } from "../Entities/Exercise";
-import { CheckIn } from "../Entities/CheckIn";
+import { checkIn } from "../Entities/CheckIn";
 import { Button, Card } from "../components";
 import { User } from "../Entities/User";
 
@@ -26,7 +26,7 @@ export default function Exercises() {
 
       // Get today's fatigue level
       const today = format(new Date(), "yyyy-MM-dd");
-      const checkIns = await CheckIn.filter({ check_in_date: today, created_by: userData.email });
+      const checkIns = await checkIn.filter({ check_in_date: today, created_by: userData.email });
       if (checkIns.length > 0) {
         setUserFatigue(checkIns[0].fatigue_level);
       }

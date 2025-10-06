@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Globe, Type, Zap, MapPin, LogOut, User as UserIcon } from "lucide-react";
 import { User } from "../Entities/User";
+import { Switch, Button } from "../components";
 
 export default function Settings() {
   const navigate = useNavigate();

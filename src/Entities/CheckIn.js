@@ -1,9 +1,9 @@
 // src/entities/CheckIn.js
-import checkInData from "./CheckIn.json";
+import CheckIn from "./CheckIn.json";
 
-export const CheckIn = {
+export const checkIn = {
   list: async (sortBy = null, limit = null) => {
-    let data = [...checkInData];
+    let data = [...CheckIn];
     if (sortBy) {
       const key = sortBy.replace("-", "");
       const reverse = sortBy.startsWith("-");

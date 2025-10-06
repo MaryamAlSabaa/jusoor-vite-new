@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Button } from "../components";
 import { createPageUrl } from "../utils";
 import { User } from "../Entities/User";
-import { CheckIn } from "../Entities/CheckIn";
+import { checkIn } from "../Entities/CheckIn";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -88,8 +88,8 @@ export default function CheckInForm() {
 
     try {
       setSubmitting(true);
-      if (CheckIn?.create) {
-        await CheckIn.create(payload);
+      if (checkIn?.create) {
+        await checkIn.create(payload);
       } else {
         console.log("Mock save CheckIn:", payload);
       }

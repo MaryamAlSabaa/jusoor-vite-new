@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
-import { CheckIn } from "../Entities/CheckIn";
+import { checkIn } from "../Entities/CheckIn";
 import { Button, Card } from "../components";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 // import { InvokeLLM } from "../integrations/Core";
@@ -67,7 +67,7 @@ export default function VoiceCheckIn() {
         }
       });
 
-      await CheckIn.create({
+      await checkIn.create({
         ...response,
         check_in_date: format(new Date(), "yyyy-MM-dd")
       });
