@@ -1,8 +1,22 @@
-[ {
- "id": 1,
+[
+  {
+    "id": 1,
     "name": "Maryam",
+    "full_name": "Maryam Al Mansouri",
+    "email": "maryam@example.com",
     "language_preference": "en",
     "accessibility_preset": "standard",
-    "onboarding_completed": false
-}
+    "onboarding_completed": true,
+    "medical_profile": {
+      "age": 42,
+      "pregnancy_status": "not_pregnant",
+      "ms_severity": "moderate",
+      "diagnosis_year": 2018,
+      "current_medications": ["Tecfidera", "Vitamin D"],
+      "primary_symptoms": ["fatigue", "balance_issues", "numbness"],
+      "mobility_aid": "none",
+      "heat_sensitivity": true,
+      "recent_relapse": false
+    }
+  }
 ]

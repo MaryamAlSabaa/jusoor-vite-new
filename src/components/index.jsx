@@ -33,7 +33,6 @@ export const Card = ({ children, style, className = "" }) => {
     </div>
   );
 };
-
 export function MedicationCard({ name, dosage, frequency, icon: Icon, color }) {
   const colorMap = {
     primary: "bg-teal-500 text-white",
@@ -43,24 +42,21 @@ export function MedicationCard({ name, dosage, frequency, icon: Icon, color }) {
   };
 
   return (
-    <div data-dynamic-content="true" style="opacity: 1; transform: none;">
-      <div class="rounded-lg text-card-foreground shadow-sm nabdh-shadow border-0 transition-all duration-300 bg-white">
-        <div class="p-4">
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                  class="lucide lucide-pill w-4 h-4 text-[var(--nabdh-primary)]" data-linenumber="46" data-dynamic-content="false">
-                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path>
-                </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pill w-4 h-4 text-[var(--nabdh-primary)]" 
-                data-linenumber="46" data-dynamic-content="false"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg>
-                <h3 data-linenumber="47" data-dynamic-content="true" class="font-semibold text-[var(--nabdh-secondary)] ">Tecfidera</h3>
-              </div>
-              <p data-linenumber="53" data-dynamic-content="true" class="text-sm text-gray-600 mb-3 ">240mg - Twice Daily</p>
+    <div className="rounded-lg text-card-foreground shadow-sm nabdh-shadow border-0 transition-all duration-300 bg-white">
+      <div className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              {/* FIXED: Changed stroke-linecap to strokeLinecap, stroke-linejoin to strokeLinejoin */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="lucide lucide-pill w-4 h-4 text-[var(--nabdh-primary)]">
+                <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path>
+                <path d="m8.5 8.5 7 7"></path>
+              </svg>
+              <h3 className="font-semibold text-[var(--nabdh-secondary)]">Tecfidera</h3>
             </div>
+            <p className="text-sm text-gray-600 mb-3">240mg - Twice Daily</p>
           </div>
         </div>
       </div>

@@ -1,53 +1,22 @@
-{
-  "name": "CheckIn",
-  "type": "object",
-  "properties": {
-    "fatigue_level": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 10,
-      "description": "Fatigue level on a scale of 0-10"
-    },
-    "mood": {
-      "type": "string",
-      "enum": [
-        "very_sad",
-        "sad",
-        "neutral",
-        "happy",
-        "very_happy"
-      ],
-      "description": "User's mood"
-    },
-    "mobility": {
-      "type": "string",
-      "enum": [
-        "independent",
-        "uses_aid",
-        "wheelchair",
-        "needs_assistance"
-      ],
-      "description": "Mobility status"
-    },
-    "pain_level": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 10,
-      "description": "Pain level on a scale of 0-10"
-    },
-    "notes": {
-      "type": "string",
-      "description": "Additional notes from the check-in"
-    },
-    "check_in_date": {
-      "type": "string",
-      "format": "date",
-      "description": "Date of the check-in"
-    }
+[
+  {
+    "id": 1,
+    "fatigue_level": 4,
+    "mood": "happy",
+    "mobility": "independent",
+    "pain_level": 2,
+    "notes": "Feeling good today",
+    "check_in_date": "2024-01-15",
+    "created_by": "test@example.com"
   },
-  "required": [
-    "fatigue_level",
-    "mood",
-    "check_in_date"
-  ]
-}
+  {
+    "id": 2, 
+    "fatigue_level": 7,
+    "mood": "neutral",
+    "mobility": "uses_aid",
+    "pain_level": 5,
+    "notes": "Tired but manageable",
+    "check_in_date": "2024-01-14",
+    "created_by": "test@example.com"
+  }
+]

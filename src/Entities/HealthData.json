@@ -1,54 +1,26 @@
-{
-  "name": "HealthData",
-  "type": "object",
-  "properties": {
-    "date": {
-      "type": "string",
-      "format": "date",
-      "description": "Date of the health data"
-    },
-    "steps": {
-      "type": "number",
-      "description": "Number of steps"
-    },
-    "active_minutes": {
-      "type": "number",
-      "description": "Active minutes"
-    },
-    "heart_rate_avg": {
-      "type": "number",
-      "description": "Average heart rate"
-    },
-    "heart_rate_resting": {
-      "type": "number",
-      "description": "Resting heart rate"
-    },
-    "sleep_hours": {
-      "type": "number",
-      "description": "Hours of sleep"
-    },
-    "sleep_quality": {
-      "type": "string",
-      "enum": [
-        "poor",
-        "fair",
-        "good",
-        "excellent"
-      ],
-      "description": "Sleep quality"
-    },
-    "data_source": {
-      "type": "string",
-      "enum": [
-        "manual",
-        "healthkit",
-        "google_fit",
-        "fitbit"
-      ],
-      "description": "Source of the data"
-    }
+[
+  {
+    "id": 1,
+    "steps": 5230,
+    "sleep_hours": 7.5,
+    "heart_rate_avg": 72,
+    "date": "2024-01-15",
+    "created_by": "test@example.com"
   },
-  "required": [
-    "date"
-  ]
-}
+  {
+    "id": 2,
+    "steps": 4870,
+    "sleep_hours": 6.8,
+    "heart_rate_avg": 75,
+    "date": "2024-01-14",
+    "created_by": "test@example.com"
+  },
+  {
+    "id": 3,
+    "steps": 6120,
+    "sleep_hours": 8.2,
+    "heart_rate_avg": 68,
+    "date": "2024-01-13",
+    "created_by": "test@example.com"
+  }
+]

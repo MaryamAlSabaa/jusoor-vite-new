@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Exercise } from "../Entities/Exercise";
+import ExerciseChatbot from '../components/ExerciseChatbot';
 import { checkIn } from "../Entities/CheckIn";
 import { Button, Card } from "../components";
 import { User } from "../Entities/User";
@@ -13,6 +14,8 @@ export default function Exercises() {
   const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [userFatigue, setUserFatigue] = useState(5);
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -20,6 +23,7 @@ export default function Exercises() {
 
   const loadData = async () => {
     try {
+      setLoading(true);
       const userData = await User.me();
       setUser(userData);
       setIsRTL(userData.language_preference === "ar");
@@ -33,13 +37,18 @@ export default function Exercises() {
 
       // Load exercises
       const allExercises = await Exercise.list();
-      setExercises(allExercises);
+      setExercises(Array.isArray(allExercises) ? allExercises : []);
     } catch (error) {
       console.error("Error loading data:", error);
+      setExercises([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const getRecommendedExercises = () => {
+    if (!Array.isArray(exercises)) return [];
+    
     // Rule-based filtering based on fatigue
     if (userFatigue >= 7) {
       return exercises.filter(ex => ex.difficulty === "beginner" && ["seated", "wheelchair"].includes(ex.mobility_requirement));
@@ -50,6 +59,19 @@ export default function Exercises() {
   };
 
   const recommendedExercises = getRecommendedExercises();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Activity className="w-12 h-12 mx-auto mb-4 animate-pulse" style={{ color: "var(--primary)" }} />
+          <p style={{ color: "var(--muted-text)" }}>
+            {isRTL ? "جاري تحميل التمارين..." : "Loading exercises..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedExercise) {
     return (
@@ -145,6 +167,45 @@ export default function Exercises() {
             {isRTL ? "تمارين آمنة معتمدة من الأطباء" : "Doctor-approved safe exercises"}
           </p>
         </div>
+
+        {/* Chatbot Trigger Card - MOVED INSIDE RETURN */}
+        <Card 
+          className="p-6 cursor-pointer hover:shadow-lg transition-all mb-6"
+          style={{ backgroundColor: "var(--surface)" }}
+          onClick={() => setShowChatbot(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--primary-100)" }}>
+                <Activity className="w-6 h-6" style={{ color: "var(--primary)" }} />
+              </div>
+              <div>
+                <h3 className="font-semibold" style={{ color: "var(--strong-text)" }}>
+                  {isRTL ? "مساعد التمارين الذكي" : "Smart Exercise Assistant"}
+                </h3>
+                <p className="text-sm" style={{ color: "var(--muted-text)" }}>
+                  {isRTL 
+                    ? "احصل على تمارين مخصصة آمنة بناءً على حالتك اليومية"
+                    : "Get personalized safe exercises based on your daily condition"}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-6 h-6" style={{ color: "var(--muted-text)" }} />
+          </div>
+        </Card>
+
+        {/* Chatbot Modal - MOVED INSIDE RETURN */}
+        {showChatbot && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md h-[80vh] flex flex-col p-6">
+              <ExerciseChatbot 
+                user={user} 
+                isRTL={isRTL} 
+                onClose={() => setShowChatbot(false)}
+              />
+            </div>
+          </div>
+        )}
 
         {userFatigue >= 7 && (
           <Card className="p-6" style={{ backgroundColor: "var(--accent-30)", borderColor: "var(--accent)" }}>

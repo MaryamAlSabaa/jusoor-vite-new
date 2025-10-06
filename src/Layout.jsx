@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom"; // ADD useLocation
 import { createPageUrl } from "./utils";
 import { User } from "./Entities/User";
 import { Home, Activity, BookOpen, Clock, Settings, Mic } from "lucide-react";
 
-
 export default function Layout({ currentPageName }) {
   const [user, setUser] = useState(null);
   const [isRTL, setIsRTL] = useState(false);
+  const location = useLocation(); // ADD this hook
+
+  // Function to get current page from URL path
+  const getCurrentPageFromPath = () => {
+    const path = location.pathname;
+    if (path === '/') return 'Home';
+    if (path === '/exercises') return 'Exercises';
+    if (path === '/checkin-form') return 'checkin-form';
+    if (path === '/journal') return 'Journal';
+    if (path === '/settings') return 'Settings';
+    if (path === '/emergency') return 'Emergency';
+    if (path === '/voice-check-in') return 'VoiceCheckIn';
+    if (path === '/health-history') return 'HealthHistory';
+    if (path === '/checkin') return 'checkin';
+    return 'Home';
+  };
+
+  const currentPage = getCurrentPageFromPath();
 
   useEffect(() => {
     loadUser();
@@ -18,11 +35,6 @@ export default function Layout({ currentPageName }) {
       const userData = await User.me();
       setUser(userData);
       setIsRTL(userData.language_preference === "ar");
-
-      // Redirect to onboarding if not completed
-      // if (!userData.onboarding_completed && currentPageName !== "Onboarding") {
-        // window.location.href = createPageUrl("Onboarding");
-      // }
     } catch (error) {
       console.error("Error loading user:", error);
     }
@@ -36,7 +48,7 @@ export default function Layout({ currentPageName }) {
   const navItems = [
     { name: "Home", nameAr: "الرئيسية", icon: Home, page: "Home" },
     { name: "Exercises", nameAr: "التمارين", icon: Activity, page: "Exercises" },
-    { name: "Voice", nameAr: "الصوت", icon: Mic, page: "VoiceCheckIn", isCenter: true },
+    { name: "Check-In", nameAr: "التسجيل اليومي", icon: Clock, page: "checkin-form", isCenter: true },
     { name: "Journal", nameAr: "اليوميات", icon: BookOpen, page: "Journal" },
     { name: "Settings", nameAr: "الإعدادات", icon: Settings, page: "Settings" },
   ];
@@ -84,7 +96,7 @@ export default function Layout({ currentPageName }) {
           <div className="flex items-center justify-around h-20">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPageName === item.page;
+              const isActive = currentPage === item.page; // CHANGED: currentPageName → currentPage
 
               if (item.isCenter) {
                 return (

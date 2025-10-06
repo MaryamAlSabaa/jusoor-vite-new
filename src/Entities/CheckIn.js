@@ -1,9 +1,10 @@
 // src/entities/CheckIn.js
-import CheckIn from "./CheckIn.json";
+import CheckInData from "./CheckIn.json";
 
+// Make sure this matches what you're importing
 export const checkIn = {
   list: async (sortBy = null, limit = null) => {
-    let data = [...CheckIn];
+    let data = [...CheckInData]; // Changed from CheckIn to CheckInData
     if (sortBy) {
       const key = sortBy.replace("-", "");
       const reverse = sortBy.startsWith("-");
@@ -14,9 +15,19 @@ export const checkIn = {
   },
 
   filter: async (criteria) => {
-    const allData = await CheckIn.list();
+    const allData = await checkIn.list(); // Changed from CheckIn.list() to checkIn.list()
     return allData.filter(item => {
       return Object.entries(criteria).every(([key, value]) => item[key] === value);
+    });
+  },
+
+  // ADD THIS METHOD for creating new check-ins
+  create: async (checkInData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log("CheckIn created:", checkInData);
+        resolve({ success: true, id: Date.now(), ...checkInData });
+      }, 200);
     });
   }
 };
