@@ -11,7 +11,8 @@ export const createPageUrl = (pageName) => {
     'VoiceCheckIn': '/voice-check-in',
     'CheckInForm': '/checkin-form',
     'HealthHistory': '/health-history',
-    'Onboarding': '/onboarding'
+    'Onboarding': '/onboarding',
+    'BookAppointment': '/BookAppointment'
   };
   
   return routes[pageName] || '/';

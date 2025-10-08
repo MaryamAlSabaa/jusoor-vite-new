@@ -1,0 +1,65 @@
+{
+  "name": "Appointment",
+  "type": "object",
+  "properties": {
+    "doctor_name": {
+      "type": "string",
+      "description": "Name of the doctor"
+    },
+    "specialty": {
+      "type": "string",
+      "description": "Doctor's specialty"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the appointment"
+    },
+    "appointment_time": {
+      "type": "string",
+      "description": "Time of the appointment"
+    },
+    "location": {
+      "type": "string",
+      "description": "Hospital or clinic location"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "routine_checkup",
+        "follow_up",
+        "emergency",
+        "consultation",
+        "therapy",
+        "mri_scan",
+        "blood_test"
+      ],
+      "description": "Type of appointment"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "confirmed",
+        "cancelled",
+        "completed"
+      ],
+      "default": "scheduled",
+      "description": "Appointment status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the appointment"
+    },
+    "reminder_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether reminder has been sent"
+    }
+  },
+  "required": [
+    "doctor_name",
+    "appointment_date",
+    "appointment_time"
+  ]
+}

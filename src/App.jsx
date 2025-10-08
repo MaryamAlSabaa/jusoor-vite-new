@@ -11,11 +11,10 @@ import HealthHistory from "./Pages/HealthHistory.jsx";
 import VoiceCheckIn from "./Pages/VoiceCheckIn.jsx";
 // import SpeechRecognition from "./Pages/SpeechRecognition.jsx";
 import Onboarding from "./Pages/Onboarding.jsx";
-import redirect from "./components/SpeechRecognitionPopup.jsx";
-
 import CheckIn from "./Pages/CheckIn.jsx";
 import Settings from "./Pages/Settings.jsx";
 import PatientReport from "./Pages/patientReport.jsx";
+import BookAppointment from "./Pages/BookAppointment.jsx";
 
 export default function App() {
   
@@ -33,6 +32,7 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="patientReport" element={<PatientReport />} />
           <Route path="CheckIn" element={<CheckIn />} />
+          <Route path="BookAppointment" element={<BookAppointment />} />
 
         </Route>
       </Routes>

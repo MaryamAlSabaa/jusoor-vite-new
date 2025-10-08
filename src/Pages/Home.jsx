@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { checkIn } from "../Entities/CheckIn";
 import { HealthData } from "../Entities/HealthData";
-import { Button, Card, HealthCard, MedicationCard } from "../components";
+import { Button, Card, HealthCard, MedicationCard, AppointmentCard } from "../components/index";
 import logo from '../assets/logo.png';
 import { Mic, Activity, TrendingUp, AlertCircle, Heart, 
   Moon,
@@ -26,6 +26,7 @@ export default function Home() {
   // const [language] = useState("en");
   const [recentHealth, setRecentHealth] = useState(null);
   const [isRTL, setIsRTL] = useState(false);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -289,33 +290,29 @@ const loadData = async () => {
       </section>
 
       {/* Upcoming Appointments */}
-      {/* <section className="space-y-4">
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className={`text-lg font-semibold text-[var(--nabdh-secondary)] ${
-            language === 'ar' ? 'arabic-font' : ''
-          }`}>
-            {getText('upcomingAppointments')}
+          <h2 className={`text-lg font-semibold text-[var(--nprimary)] `}>
+            {isRTL ? "المواعيد القادمة" : "Upcoming Appointments"}
           </h2>
           <Link to={createPageUrl("BookAppointment")} className="inline-block">
             <Button
               variant="outline"
               size="sm"
-              className="nabdh-button"
+              className="button"
             >
               <Plus className="w-4 h-4 mr-1" />
-              {getText('bookAppointment')}
+              {isRTL ? "حجز موعد" : "Book Appointment"}
             </Button>
           </Link>
         </div>
         
         {upcomingAppointments.length === 0 ? (
-          <Card className="border-dashed border-2 border-gray-200">
-            <CardContent className="p-6 text-center">
+            <Card className="p-6 text-center">
               <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className={`text-gray-500 ${language === 'ar' ? 'arabic-font' : ''}`}>
-                {getText('noAppointments')}
+              <p className={`text-gray-500 `}>
+                    {isRTL ? "لا يوجد موعد" : "No Appointments"}
               </p>
-            </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
@@ -335,18 +332,21 @@ const loadData = async () => {
               } 
               return (
                 <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  onCall={handleCallDoctor}
-                  onReschedule={handleRescheduleAppointment}
+                  doctor="Dr. Aisha Al Mansoori"
+                  specialty="Neurology"
+                  date="2025-10-12"
+                  time="10:30 AM"
+                  location="Dubai Hospital"
+                  type="Consultation"
+                  // onReschedule={handleRescheduleAppointment}
                 />
               );
             })}
           </div>
         )}
-      </section> */}
+      </section>
 
-        {/* Health Summary */}
+        {/* Health Summary
         {recentHealth && (
           <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
             <div className="flex items-center gap-3 mb-4">
@@ -388,7 +388,7 @@ const loadData = async () => {
               </Button>
             </Link>
           </Card>
-        )}
+        )} */}
 
         {/* Tip of the Day */}
         <Card className="p-6" style={{ backgroundColor: "var(--primary-100)" }}>

@@ -5,13 +5,15 @@ import { Link, Navigate  } from "react-router-dom";
 export default function SpeechRecognitionPopup({ onClose }) {
   const [redirectURL, setRedirectURL] = useState("");
   
-  const pages = ["Home", "Home Page", "Exercises", "Exercise", "Voice", "Journal", "Settings", "Emergency", "reports", "Check In", "Health History"];
+  const pages = ["Home", "Home Page", "Book Appointments", "Appointments" ,"Exercises", "Exercise", "Voice", "Journal", "Settings", "Emergency", "reports", "Check In", "Health History"];
   const urls = {
   Home: "/",                
   "Home Page": "/",
   Emergency: "/emergency",
   Exercises: "/exercises",
   Exercise: "/exercises",
+  Appointments: "/BookAppointment",
+  "Book Appointments": "/BookAppointment",
   Journal: "/journal",
   "Health History": "/health-history",
   Voice: "/voice-check-in",
