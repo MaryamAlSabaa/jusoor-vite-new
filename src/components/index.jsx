@@ -2,56 +2,6 @@ import React, { useState } from "react";
 import { Pill, Check, Bell, Calendar, Clock, MapPin, User, RefreshCw, Phone } from "lucide-react";
 import { motion } from 'framer-motion';
 
-
-// export const AppointmentCard = ({ appointment, onCall, onReschedule }) => {
-//   return (
-//     <Card className="p-4 flex flex-col gap-2">
-//       <div className="flex items-center justify-between">
-//         <div>
-//           <h4 className="font-semibold text-lg mb-1">{appointment.doctor_name || "Doctor"}</h4>
-//           <p className="text-sm text-gray-500">{appointment.location}</p>
-//         </div>
-//         <Calendar className="w-6 h-6 text-primary" />
-//       </div>
-//       <div className="flex items-center gap-2 text-gray-700">
-//         <span>{new Date(appointment.appointment_date).toLocaleString()}</span>
-//         <span className="ml-2 px-2 py-1 rounded bg-primary-100 text-primary text-xs">
-//           {appointment.type ? appointment.type.replace(/_/g, " ") : "Appointment"}
-//         </span>
-//       </div>
-//       <div className="flex gap-2 mt-2">
-//         <button
-//           className="flex items-center gap-1 px-3 py-1 rounded bg-primary text-white text-sm hover:bg-primary-400"
-//           onClick={() => onCall && onCall(appointment)}
-//         >
-//           <Phone className="w-4 h-4" /> Call
-//         </button>
-//         <button
-//           className="flex items-center gap-1 px-3 py-1 rounded bg-accent text-white text-sm hover:bg-accent-30"
-//           onClick={() => onReschedule && onReschedule(appointment)}
-//         >
-//           <RefreshCw className="w-4 h-4" /> Reschedule
-//         </button>
-//       </div>
-//     </Card>
-//   );
-// }
-
-export const Input = (props) => (
-  <input
-    {...props}
-    className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 ${props.className || ''}`}
-  />
-);
-
-export const Textarea = (props) => (
-  <textarea
-    {...props}
-    className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 ${props.className || ''}`}
-  />
-);
-
-
 export const AppointmentCard = ({ doctor, specialty, date, time, location, type }) => {
   return (
     <Card className="w-full border nabdh-shadow p-4">
@@ -204,11 +154,6 @@ export function MedicationCard({
                 ))}
             </div>
           </div>
-          {/* <div
-            className={`w-10 h-10 flex items-center justify-center rounded-full ${colorMap[color]}`}
-          > */}
-            <Pill className="w-4 h-4" />
-          {/* </div> */}
         </div>
       </div>
     </div>

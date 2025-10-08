@@ -5,8 +5,11 @@ import { checkIn } from "../Entities/CheckIn";
 import { HealthData } from "../Entities/HealthData";
 import { Button, Card, HealthCard, MedicationCard, AppointmentCard } from "../components/index";
 import logo from '../assets/logo.png';
-import { Mic, Activity, TrendingUp, AlertCircle, Heart, 
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+import { Mic, Activity, TrendingUp,ThermometerSun , AlertCircle, Heart, 
   Moon,
+  BarChart2,
   Calendar,
   BookOpen,
   Dumbbell,
@@ -23,10 +26,18 @@ import { User } from "../Entities/User";
 export default function Home() {
   const [user, setUser] = useState(null);
   const [todayCheckIn, setTodayCheckIn] = useState(null);
-  // const [language] = useState("en");
   const [recentHealth, setRecentHealth] = useState(null);
   const [isRTL, setIsRTL] = useState(false);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [showTrend, setShowTrend] = useState(false);
+
+  const tempHistory = [
+  { time: "8 AM", temp: 36.5 },
+  { time: "10 AM", temp: 36.8 },
+  { time: "12 PM", temp: 37.0 },
+  { time: "2 PM", temp: 36.9 },
+  { time: "4 PM", temp: 37.1 },
+];
 
   useEffect(() => {
     loadData();
@@ -241,38 +252,106 @@ const loadData = async () => {
         <div className="grid grid-cols-2 gap-4">
           <HealthCard 
             title={isRTL ? "معدل القلب": "Heart Rate"}
-            value="--"
+            value="96"
             subtitle="BPM"
             icon={Heart}
             color="heartRate"
           />
           <HealthCard 
             title={isRTL ? "الخطوات" : "Steps"}
-            value="--"
+            value="2,300"
             subtitle="steps"
             icon={Activity}
             color="steps"
           />
           <HealthCard 
             title={isRTL ? "النوم" : "Sleep"}
-            value="--"
+            value="5.5"
             subtitle="hours"
             icon={Moon}
             color="sleep"
           />
           <HealthCard 
             title={isRTL ? "المزاج" : "Mood"}
-            value={todayCheckIn ? "😊" : "--"}
+            value={todayCheckIn ? "😊" : "😐"}
             icon={TrendingUp}
             color={todayCheckIn ? "mood" : "noMood"}
           />
         </div>
+        {/* Body Temperature Card */}
+        
+  <Card
+  className="p-6 mt-4 w-full rounded-2xl shadow-md"
+  style={{
+    background: "linear-gradient(135deg, #FFF9E6 0%, #FFEFD5 100%)",
+    border: "1px solid #FFE0B2",
+  }}
+>
+  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+    {/* Left side: Temperature value */}
+    <div className="flex items-center gap-3">
+      <div className="text-4xl">  <ThermometerSun size={36} color="#D35400" /></div>
+      <div>
+        <h4 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
+          {isRTL ? "درجة حرارة الجسم" : "Body Temperature"}
+        </h4>
+        <p className="text-3xl font-bold" style={{ color: "#D35400" }}>
+          36.8°C
+        </p>
+      </div>
+    </div>
+
+    {/* Right side: Status + Analysis */}
+    <div className="flex flex-col text-sm md:text-base w-full md:w-auto">
+      {/* Row for status badge + chart icon */}
+      <div className="flex items-center justify-between">
+        <span
+          className="px-3 py-1 rounded-full font-medium text-white"
+          style={{ backgroundColor: "#2ECC71" }}
+        >
+          {isRTL ? "طبيعي" : "Normal"}
+        </span>
+        <button onClick={() => setShowTrend(!showTrend)}>
+          <BarChart2 size={28} color="#000000" />
+        </button>
+      </div>
+
+      {/* Analysis text */}
+      <div className="mt-2 text-left">
+        <h5 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
+          {isRTL ? "تحليل" : "Analysis"}
+        </h5>
+        <p style={{ color: "var(--strong-text)" }}>
+          {isRTL
+            ? "درجة الحرارة ضمن النطاق الطبيعي. لا توجد علامات على الحمى."
+            : "Temperature is within the normal range. No signs of fever."}
+        </p>
+      </div>
+    </div>
+  </div>
+
+    {/* Trend Chart Section */}
+      {showTrend && (
+        <div className="mt-4 h-32">
+          <h6 className="font-semibold mb-1" style={{ color: "#E67E22" }}>{isRTL ? "تطور درجة الحرارة" : "Temperature Trend"}</h6>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={tempHistory}>
+              <XAxis dataKey="time" />
+              <YAxis domain={[36, 38]} />
+              <Tooltip />
+              <Line type="monotone" dataKey="temp" stroke="#E67E22" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+</Card>
+
+
          {/* My Medications */}
       <section className="space-y-4">
-        <h2 className={`text-lg font-semibold text-[var(--nabdh-secondary)] `}>
+        <h2 className={`text-lg font-semibold `}>
           Medications </h2>
 
-        {/* Example of active medication */}
         <MedicationCard
           name="Tecfidera"
           dosage="240mg"
@@ -346,49 +425,7 @@ const loadData = async () => {
         )}
       </section>
 
-        {/* Health Summary
-        {recentHealth && (
-          <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
-            <div className="flex items-center gap-3 mb-4">
-              <Heart className="w-5 h-5" style={{ color: "var(--primary)" }} />
-              <h3 className="font-semibold text-lg" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "الصحة اليوم" : "Health Today"}
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {recentHealth.steps && (
-                <div>
-                  <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                    {isRTL ? "الخطوات" : "Steps"}
-                  </p>
-                  <p className="text-xl font-bold" style={{ color: "var(--strong-text)" }}>
-                    {recentHealth.steps.toLocaleString()}
-                  </p>
-                </div>
-              )}
-              {recentHealth.sleep_hours && (
-                <div>
-                  <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                    {isRTL ? "النوم" : "Sleep"}
-                  </p>
-                  <p className="text-xl font-bold" style={{ color: "var(--strong-text)" }}>
-                    {recentHealth.sleep_hours}h
-                  </p>
-                </div>
-              )}
-            </div>
-            <Link to={createPageUrl("HealthHistory")}>
-              <Button
-                variant="ghost"
-                className="w-full mt-4"
-                style={{ color: "var(--primary)" }}
-              >
-                {isRTL ? "عرض السجل الكامل" : "View Full History"}
-                <TrendingUp className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </Card>
-        )} */}
+       
 
         {/* Tip of the Day */}
         <Card className="p-6" style={{ backgroundColor: "var(--primary-100)" }}>

@@ -12,24 +12,29 @@ import CheckInForm from "./Pages/CheckInForm.jsx";
 import Settings from "./Pages/Settings.jsx";
 import PatientReport from "./Pages/patientReport.jsx";
 import BookAppointment from "./Pages/BookAppointment.jsx";
-
+import { AccessibilityProvider } from "./Entities/AccessibilityContext.jsx"; 
+import AppWrapper from "./components/AppWrapper.jsx"; 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="emergency" element={<Emergency />} />
-        <Route path="exercises" element={<Exercises />} />
-        <Route path="journal" element={<Journal />} />
-        <Route path="health-history" element={<PatientReport />} />
-        <Route path="voice-check-in" element={<VoiceCheckIn />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="patientReport" element={<PatientReport />} />
-        <Route path="check-in" element={<CheckIn />} />
-        <Route path="check-in-form" element={<CheckInForm />} />
-        <Route path="BookAppointment" element={<BookAppointment />} />
+      <AccessibilityProvider>
+        <AppWrapper>
+         <Routes>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="emergency" element={<Emergency />} />
+            <Route path="exercises" element={<Exercises />} />
+            <Route path="journal" element={<Journal />} />
+            <Route path="health-history" element={<PatientReport />} />
+            <Route path="voice-check-in" element={<VoiceCheckIn />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="patientReport" element={<PatientReport />} />
+            <Route path="check-in" element={<CheckIn />} />
+            <Route path="check-in-form" element={<CheckInForm />} />
+            <Route path="BookAppointment" element={<BookAppointment />} />
       </Route>
     </Routes>
+    </AppWrapper>
+  </AccessibilityProvider>
   );
 }
