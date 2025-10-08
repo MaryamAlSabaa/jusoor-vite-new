@@ -1,33 +1,67 @@
-// src/entities/CheckIn.js
-import CheckInData from "./CheckIn.json";
-
-// Make sure this matches what you're importing
+// src/Entities/CheckIn.js
 export const checkIn = {
-  list: async (sortBy = null, limit = null) => {
-    let data = [...CheckInData]; // Changed from CheckIn to CheckInData
-    if (sortBy) {
-      const key = sortBy.replace("-", "");
-      const reverse = sortBy.startsWith("-");
-      data.sort((a, b) => (a[key] > b[key] ? 1 : -1) * (reverse ? -1 : 1));
+  list: async () => {
+    try {
+      // Check both storage locations for compatibility
+      const currentCheckIn = localStorage.getItem("currentCheckIn");
+      const allCheckIns = localStorage.getItem("allCheckIns");
+      
+      if (currentCheckIn) {
+        const parsed = JSON.parse(currentCheckIn);
+        return [parsed];
+      }
+      
+      if (allCheckIns) {
+        const parsed = JSON.parse(allCheckIns);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("Error loading check-ins:", error);
+      return [];
     }
-    if (limit) data = data.slice(0, limit);
-    return new Promise((resolve) => setTimeout(() => resolve(data), 200));
   },
 
   filter: async (criteria) => {
-    const allData = await checkIn.list(); // Changed from CheckIn.list() to checkIn.list()
-    return allData.filter(item => {
-      return Object.entries(criteria).every(([key, value]) => item[key] === value);
-    });
+    try {
+      const allData = await checkIn.list();
+      const today = new Date().toISOString().split('T')[0];
+      
+      return allData.filter(item => {
+        if (item.check_in_date !== today) return false;
+        return Object.entries(criteria).every(([key, value]) => item[key] === value);
+      });
+    } catch (error) {
+      console.error("Error filtering check-ins:", error);
+      return [];
+    }
   },
 
-  // ADD THIS METHOD for creating new check-ins
   create: async (checkInData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("CheckIn created:", checkInData);
-        resolve({ success: true, id: Date.now(), ...checkInData });
-      }, 200);
-    });
-  }
+    try {
+      const result = {
+        id: Date.now(),
+        ...checkInData,
+        created_at: new Date().toISOString()
+      };
+      
+      console.log("💾 Saving check-in:", result);
+      
+      // Save to both storage locations for compatibility
+      localStorage.setItem("currentCheckIn", JSON.stringify(result));
+      
+      // Also save to array for historical data
+      const allCheckIns = JSON.parse(localStorage.getItem("allCheckIns") || "[]");
+      const filtered = allCheckIns.filter(c => c.id !== result.id);
+      filtered.push(result);
+      localStorage.setItem("allCheckIns", JSON.stringify(filtered));
+      
+      console.log("✅ Check-in saved successfully");
+      return result;
+    } catch (error) {
+      console.error("❌ Error saving check-in:", error);
+      throw error;
+    }
+  },
 };

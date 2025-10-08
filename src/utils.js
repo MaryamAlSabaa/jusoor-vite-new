@@ -1,19 +1,15 @@
-export const createPageUrl = (pageName) => {
+export function createPageUrl(pageName) {
   const routes = {
-    'Home': '/',
-    'Exercises': '/exercises',
-    'checkin': '/checkin',
-    'CheckIn': '/checkin',
-    'checkin-form': '/checkin-form', // ADD this
-    'Journal': '/journal',
-    'Settings': '/settings',
-    'Emergency': '/emergency',
-    'VoiceCheckIn': '/voice-check-in',
-    'CheckInForm': '/checkin-form',
-    'HealthHistory': '/health-history',
-    'Onboarding': '/onboarding',
-    'BookAppointment': '/BookAppointment'
+    Home: "/",
+    Exercises: "/exercises",
+    CheckIn: "/check-in",
+    CheckInForm: "/check-in-form",
+    VoiceCheckIn: "/voice-check-in",
+    Journal: "/journal",
+    Settings: "/settings",
+    Emergency: "/emergency",
+    PatientReport: "/patientReport",
+    BookAppointment: "/BookAppointment",
   };
-  
-  return routes[pageName] || '/';
-};
+  return routes[pageName] || "/";
+}

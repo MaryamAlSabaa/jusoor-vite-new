@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Exercise } from "../Entities/Exercise";
-import ExerciseChatbot from '../components/ExerciseChatbot';
+import ExerciseChatbot from "../components/ExerciseChatbot";
 import { checkIn } from "../Entities/CheckIn";
 import { Button, Card } from "../components";
 import { User } from "../Entities/User";
-
+import { useNavigate } from "react-router-dom";
 import { Activity, Clock, ChevronRight, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { ChatBaseAI } from "../integrations/ChatBaseAI";
 
 export default function Exercises() {
   const [user, setUser] = useState(null);
@@ -16,44 +17,110 @@ export default function Exercises() {
   const [userFatigue, setUserFatigue] = useState(5);
   const [showChatbot, setShowChatbot] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    loadData();
-  }, []);
+useEffect(() => {
+  const handleFocus = () => loadData(); // reload whenever user comes back to this page
+  window.addEventListener("focus", handleFocus);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const userData = await User.me();
-      setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
+  loadData(); // initial load
 
-      // Get today's fatigue level
-      const today = format(new Date(), "yyyy-MM-dd");
-      const checkIns = await checkIn.filter({ check_in_date: today, created_by: userData.email });
-      if (checkIns.length > 0) {
-        setUserFatigue(checkIns[0].fatigue_level);
+  return () => window.removeEventListener("focus", handleFocus);
+}, []);
+const loadData = async () => {
+  try {
+    console.log("🔍 Starting loadData...");
+    const today = format(new Date(), "yyyy-MM-dd");
+    const userData = await User.me();
+    console.log("👤 User:", userData.email);
+    
+    // SIMPLE DIRECT CHECK - No complex logic
+    const localCheckIn = localStorage.getItem("currentCheckIn");
+    console.log("📱 Raw localStorage:", localCheckIn);
+    
+    let todayCheck = null;
+    
+    if (localCheckIn) {
+      try {
+        const parsed = JSON.parse(localCheckIn);
+        console.log("📋 Parsed check-in:", parsed);
+        
+        // Check if it's today AND belongs to current user
+        const isToday = parsed.check_in_date === today;
+        const isCurrentUser = parsed.created_by === userData.email;
+        
+        console.log("✅ Date check:", parsed.check_in_date, "===", today, "=>", isToday);
+        console.log("✅ User check:", parsed.created_by, "===", userData.email, "=>", isCurrentUser);
+        
+        if (isToday && isCurrentUser) {
+          todayCheck = parsed;
+          console.log("🎯 VALID check-in found!");
+        } else {
+          console.log("❌ INVALID check-in - wrong date or user");
+          // Don't clear it - just don't use it
+        }
+      } catch (error) {
+        console.error("❌ Error parsing check-in:", error);
       }
-
-      // Load exercises
-      const allExercises = await Exercise.list();
-      setExercises(Array.isArray(allExercises) ? allExercises : []);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setExercises([]);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    if (!todayCheck) {
+      console.log("🚫 No valid check-in for today");
+      setHasCheckedInToday(false);
+      setExercises([]); // Clear any existing exercises
+      setLoading(false);
+      return;
+    }
+
+    console.log("✅ CHECK-IN CONFIRMED! Fatigue:", todayCheck.fatigue_level);
+    setHasCheckedInToday(true);
+    setUserFatigue(todayCheck.fatigue_level);
+
+    // Get exercises
+    try {
+      console.log("🤖 Getting exercises for fatigue level:", todayCheck.fatigue_level);
+      const recommendations = await ChatBaseAI.getExerciseRecommendations(
+        userData,
+        todayCheck,
+        {}
+      );
+      console.log("🎯 Exercises loaded:", recommendations.exercises?.length);
+      setExercises(recommendations.exercises || []);
+    } catch (error) {
+      console.error("❌ Error getting exercises:", error);
+      const fallback = ChatBaseAI.getFallbackExercises();
+      setExercises(fallback.exercises || []);
+    }
+  } catch (error) {
+    console.error("💥 Error in loadData:", error);
+    setHasCheckedInToday(false);
+    setExercises([]);
+  } finally {
+    setLoading(false);
+  }
+};
+const handleExerciseAssistantClick = () => {
+  if (!hasCheckedInToday) {
+    navigate("/check-in-form");  // Direct to form instead of check-in page
+  } else {
+    setShowChatbot(true);
+  }
+};
 
   const getRecommendedExercises = () => {
     if (!Array.isArray(exercises)) return [];
-    
-    // Rule-based filtering based on fatigue
+
     if (userFatigue >= 7) {
-      return exercises.filter(ex => ex.difficulty === "beginner" && ["seated", "wheelchair"].includes(ex.mobility_requirement));
+      return exercises.filter(
+        (ex) =>
+          ex.difficulty === "beginner" &&
+          ["seated", "wheelchair"].includes(ex.mobility_requirement)
+      );
     } else if (userFatigue >= 4) {
-      return exercises.filter(ex => ["beginner", "intermediate"].includes(ex.difficulty));
+      return exercises.filter((ex) =>
+        ["beginner", "intermediate"].includes(ex.difficulty)
+      );
     }
     return exercises;
   };
@@ -64,7 +131,10 @@ export default function Exercises() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Activity className="w-12 h-12 mx-auto mb-4 animate-pulse" style={{ color: "var(--primary)" }} />
+          <Activity
+            className="w-12 h-12 mx-auto mb-4 animate-pulse"
+            style={{ color: "var(--primary)" }}
+          />
           <p style={{ color: "var(--muted-text)" }}>
             {isRTL ? "جاري تحميل التمارين..." : "Loading exercises..."}
           </p>
@@ -73,110 +143,72 @@ export default function Exercises() {
     );
   }
 
-  if (selectedExercise) {
+  // If no check-in today
+  if (!hasCheckedInToday) {
     return (
       <div className="min-h-screen p-6" dir={isRTL ? "rtl" : "ltr"}>
         <div className="max-w-2xl mx-auto space-y-6">
-          <Button
-            onClick={() => setSelectedExercise(null)}
-            variant="ghost"
-            style={{ color: "var(--primary)" }}
-          >
-            ← {isRTL ? "رجوع" : "Back"}
-          </Button>
-
-          {selectedExercise.image_url && (
-            <img
-              src={selectedExercise.image_url}
-              alt={isRTL ? selectedExercise.title_ar : selectedExercise.title}
-              className="w-full h-64 object-cover rounded-2xl"
-            />
-          )}
-
-          <div>
-            <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
-              {isRTL ? selectedExercise.title_ar || selectedExercise.title : selectedExercise.title}
-            </h1>
-            <div className="flex items-center gap-4 text-sm" style={{ color: "var(--muted-text)" }}>
-              <span className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {selectedExercise.duration_minutes} {isRTL ? "دقيقة" : "min"}
-              </span>
-              <span className="px-3 py-1 rounded-full" style={{ backgroundColor: "var(--primary-100)", color: "var(--primary)" }}>
-                {selectedExercise.difficulty}
-              </span>
-            </div>
-          </div>
-
-          <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
-            <h3 className="font-semibold mb-3" style={{ color: "var(--strong-text)" }}>
-              {isRTL ? "الوصف" : "Description"}
-            </h3>
-            <p style={{ color: "var(--muted-text)" }}>
-              {isRTL ? selectedExercise.description_ar || selectedExercise.description : selectedExercise.description}
-            </p>
-          </Card>
-
-          <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
-            <h3 className="font-semibold mb-3" style={{ color: "var(--strong-text)" }}>
-              {isRTL ? "الخطوات" : "Steps"}
-            </h3>
-            <ol className="space-y-3">
-              {(isRTL ? selectedExercise.steps_ar || selectedExercise.steps : selectedExercise.steps).map((step, index) => (
-                <li key={index} className="flex gap-3">
-                  <span
-                    className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold"
-                    style={{ backgroundColor: "var(--primary-100)", color: "var(--primary)" }}
-                  >
-                    {index + 1}
-                  </span>
-                  <span style={{ color: "var(--muted-text)" }}>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </Card>
-
-          {selectedExercise.contraindications && (
-            <Card className="p-6" style={{ backgroundColor: "rgba(217,83,79,0.1)", borderColor: "var(--error)" }}>
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "var(--error)" }} />
-                <div>
-                  <h3 className="font-semibold mb-2" style={{ color: "var(--error)" }}>
-                    {isRTL ? "تحذيرات السلامة" : "Safety Warnings"}
-                  </h3>
-                  <p className="text-sm" style={{ color: "var(--strong-text)" }}>
-                    {isRTL ? selectedExercise.contraindications_ar || selectedExercise.contraindications : selectedExercise.contraindications}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen p-6" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
           <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
             {isRTL ? "التمارين" : "Exercises"}
           </h1>
           <p style={{ color: "var(--muted-text)" }}>
             {isRTL ? "تمارين آمنة معتمدة من الأطباء" : "Doctor-approved safe exercises"}
           </p>
-        </div>
 
-        {/* Chatbot Trigger Card - MOVED INSIDE RETURN */}
-        <Card 
+          {/* Check-In Required Card */}
+          <Card
+            className="p-6 text-center"
+            style={{ backgroundColor: "var(--accent-30)", borderColor: "var(--accent)" }}
+          >
+            <Activity className="w-16 h-16 mx-auto mb-4" style={{ color: "var(--accent)" }} />
+            <h3 className="text-xl font-semibold mb-3" style={{ color: "var(--strong-text)" }}>
+              {isRTL ? "التسجيل اليومي مطلوب" : "Daily Check-In Required"}
+            </h3>
+            <p className="mb-4" style={{ color: "var(--muted-text)" }}>
+              {isRTL
+                ? "يجب إكمال التسجيل اليومي أولاً للحصول على تمارين مخصصة آمنة"
+                : "Please complete your daily check-in first to get personalized safe exercises"}
+            </p>
+<Button
+  onClick={() => navigate("/check-in-form")}  // Changed from "/check-in"
+  style={{
+    backgroundColor: "var(--primary)",
+    color: "white",
+    padding: "0.75rem 2rem",
+    fontSize: "1.1rem",
+  }}
+>
+  {isRTL ? "اذهب للتسجيل" : "Go to Check-In"}
+</Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // If checked in
+  return (
+    <div className="min-h-screen p-6" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
+          {isRTL ? "التمارين" : "Exercises"}
+        </h1>
+        <p style={{ color: "var(--muted-text)" }}>
+          {isRTL ? "تمارين آمنة معتمدة من الأطباء" : "Doctor-approved safe exercises"}
+        </p>
+
+        {/* Exercise Assistant Card */}
+        <Card
           className="p-6 cursor-pointer hover:shadow-lg transition-all mb-6"
           style={{ backgroundColor: "var(--surface)" }}
-          onClick={() => setShowChatbot(true)}
+          onClick={handleExerciseAssistantClick}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--primary-100)" }}>
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: "var(--primary-100)" }}
+              >
                 <Activity className="w-6 h-6" style={{ color: "var(--primary)" }} />
               </div>
               <div>
@@ -184,7 +216,7 @@ export default function Exercises() {
                   {isRTL ? "مساعد التمارين الذكي" : "Smart Exercise Assistant"}
                 </h3>
                 <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                  {isRTL 
+                  {isRTL
                     ? "احصل على تمارين مخصصة آمنة بناءً على حالتك اليومية"
                     : "Get personalized safe exercises based on your daily condition"}
                 </p>
@@ -194,13 +226,13 @@ export default function Exercises() {
           </div>
         </Card>
 
-        {/* Chatbot Modal - MOVED INSIDE RETURN */}
+        {/* Chatbot Modal */}
         {showChatbot && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl w-full max-w-md h-[80vh] flex flex-col p-6">
-              <ExerciseChatbot 
-                user={user} 
-                isRTL={isRTL} 
+              <ExerciseChatbot
+                user={user}
+                isRTL={isRTL}
                 onClose={() => setShowChatbot(false)}
               />
             </div>
@@ -210,43 +242,48 @@ export default function Exercises() {
         {userFatigue >= 7 && (
           <Card className="p-6" style={{ backgroundColor: "var(--accent-30)", borderColor: "var(--accent)" }}>
             <p className="font-medium" style={{ color: "var(--strong-text)" }}>
-              {isRTL 
+              {isRTL
                 ? "لاحظنا أنك تشعر بالتعب اليوم. نعرض تمارين خفيفة فقط."
                 : "We noticed you're feeling tired today. Showing only gentle exercises."}
             </p>
           </Card>
         )}
 
-        <div className="grid gap-4">
-          {recommendedExercises.map((exercise) => (
-            <Card
-              key={exercise.id}
-              className="p-6 cursor-pointer hover:shadow-lg transition-all"
-              style={{ backgroundColor: "var(--surface)" }}
-              onClick={() => setSelectedExercise(exercise)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--strong-text)" }}>
-                    {isRTL ? exercise.title_ar || exercise.title : exercise.title}
-                  </h3>
-                  <div className="flex items-center gap-4 text-sm" style={{ color: "var(--muted-text)" }}>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {exercise.duration_minutes} {isRTL ? "دقيقة" : "min"}
-                    </span>
-                    <span className="px-3 py-1 rounded-full" style={{ backgroundColor: "var(--primary-100)", color: "var(--primary)" }}>
-                      {exercise.category}
-                    </span>
+        {!showChatbot && (
+          <div className="grid gap-4">
+            {recommendedExercises.map((exercise) => (
+              <Card
+                key={exercise.id}
+                className="p-6 cursor-pointer hover:shadow-lg transition-all"
+                style={{ backgroundColor: "var(--surface)" }}
+                onClick={() => setSelectedExercise(exercise)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--strong-text)" }}>
+                      {isRTL ? exercise.title_ar || exercise.title : exercise.title}
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm" style={{ color: "var(--muted-text)" }}>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {exercise.duration_minutes} {isRTL ? "دقيقة" : "min"}
+                      </span>
+                      <span
+                        className="px-3 py-1 rounded-full"
+                        style={{ backgroundColor: "var(--primary-100)", color: "var(--primary)" }}
+                      >
+                        {exercise.category}
+                      </span>
+                    </div>
                   </div>
+                  <ChevronRight className="w-6 h-6" style={{ color: "var(--muted-text)" }} />
                 </div>
-                <ChevronRight className="w-6 h-6" style={{ color: "var(--muted-text)" }} />
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
 
-        {recommendedExercises.length === 0 && (
+        {!showChatbot && recommendedExercises.length === 0 && (
           <Card className="p-12 text-center" style={{ backgroundColor: "var(--surface)" }}>
             <Activity className="w-16 h-16 mx-auto mb-4" style={{ color: "var(--muted-text)" }} />
             <p style={{ color: "var(--muted-text)" }}>

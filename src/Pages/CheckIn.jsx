@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Card, Button } from "../components";
-import { createPageUrl } from "../utils";
 import { User } from "../Entities/User";
 import { checkIn } from "../Entities/CheckIn";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Mic, BookOpen, Clock } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
-export default function CheckInPage() {
+export default function CheckIn() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isRTL, setIsRTL] = useState(false);
@@ -18,85 +17,93 @@ export default function CheckInPage() {
   }, []);
 
   const loadUser = async () => {
-    try {
-      const userData = await User.me();
-      setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
+  try {
+    const userData = await User.me();
+    setUser(userData);
+    setIsRTL(userData.language_preference === "ar");
 
-      // Check if user already completed check-in today
-      const today = format(new Date(), "yyyy-MM-dd");
-      const checkIns = await checkIn.filter({ check_in_date: today, created_by: userData.email });
-      if (checkIns.length > 0) {
-        setTodayCheckIn(checkIns[0]);
+    const today = format(new Date(), "yyyy-MM-dd");
+
+    // Check in localStorage
+    const localCheckIn = localStorage.getItem("currentCheckIn");
+    if (localCheckIn) {
+      const parsed = JSON.parse(localCheckIn);
+      if (parsed.check_in_date === today && parsed.created_by === userData.email) {
+        setTodayCheckIn(parsed);
+        return;
       }
-    } catch (error) {
-      console.error("Error loading user:", error);
     }
-  };
+
+    // Otherwise look up ALL check-ins but filter to today's
+    const checkIns = await checkIn.list();
+    const todayCheck = checkIns.find(
+      c => c.check_in_date === today && c.created_by === userData.email
+    );
+
+    setTodayCheckIn(todayCheck || null);
+  } catch (error) {
+    console.error("Error loading user:", error);
+  }
+};
+
 
   const t = (en, ar) => (isRTL ? ar : en);
 
   return (
     <div className="min-h-screen p-6 pb-24" dir={isRTL ? "rtl" : "ltr"}>
       <div className="max-w-2xl mx-auto space-y-6">
-        
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
             {t("Daily Check-In", "التسجيل اليومي")}
           </h1>
           <p style={{ color: "var(--muted-text)" }}>
-            {t("Choose how you'd like to check in today", "اختر طريقة التسجيل اليوم")}
+            {t("Complete your daily check-in to access personalized exercises", "أكمل تسجيلك اليومي للوصول إلى التمارين المخصصة")}
           </p>
         </div>
 
         {/* Manual Check-In Card */}
-        <Card 
-          className="p-6 cursor-pointer hover:shadow-lg transition-all"
-          style={{ backgroundColor: "var(--surface)" }}
-          onClick={() => navigate(createPageUrl("CheckInForm"))} // We'll rename the old CheckIn to CheckInForm
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--primary-100)" }}>
-                <BookOpen className="w-6 h-6" style={{ color: "var(--primary)" }} />
+        <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
+          <div 
+            className="cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => navigate("/check-in-form")}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--primary-100)" }}>
+                  <BookOpen className="w-6 h-6" style={{ color: "var(--primary)" }} />
+                </div>
+                <div>
+                  <h3 className="font-semibold" style={{ color: "var(--strong-text)" }}>
+                    {t("Daily Check-In", "التسجيل اليومي")}
+                  </h3>
+                  <p className="text-sm" style={{ color: "var(--muted-text)" }}>
+                    {t("Fill out detailed form with fatigue, mood, symptoms", "املأ نموذج مفصل بالإرهاق، المزاج، والأعراض")}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold" style={{ color: "var(--strong-text)" }}>
-                  {t("Manual Check-In", "تسجيل يدوي")}
-                </h3>
-                <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                  {t("Fill out detailed form with fatigue, mood, symptoms", "املأ نموذج مفصل بالإرهاق، المزاج، والأعراض")}
-                </p>
+              <div className="w-6 h-6 flex items-center justify-center">
+                <span style={{ color: "var(--muted-text)", fontSize: "1.5rem" }}>→</span>
               </div>
             </div>
-            <Clock className="w-6 h-6" style={{ color: "var(--muted-text)" }} />
           </div>
         </Card>
 
-        {/* Voice Check-In Card */}
-        <Card 
-          className="p-6 cursor-pointer hover:shadow-lg transition-all"
-          style={{ backgroundColor: "var(--surface)" }}
-          onClick={() => navigate(createPageUrl("VoiceCheckIn"))}
+        {/* Start Check-In Button */}
+        <Button
+          onClick={() => navigate("/check-in-form")}
+          style={{
+            backgroundColor: "var(--primary)",
+            color: "white",
+            fontWeight: 600,
+            borderRadius: 12,
+            padding: "1rem 2rem",
+            fontSize: "1.1rem",
+            width: "100%"
+          }}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--primary-100)" }}>
-                <Mic className="w-6 h-6" style={{ color: "var(--primary)" }} />
-              </div>
-              <div>
-                <h3 className="font-semibold" style={{ color: "var(--strong-text)" }}>
-                  {t("Voice Check-In", "تسجيل صوتي")}
-                </h3>
-                <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                  {t("Speak about how you're feeling today", "تحدث عن شعورك اليوم")}
-                </p>
-              </div>
-            </div>
-            <Mic className="w-6 h-6" style={{ color: "var(--muted-text)" }} />
-          </div>
-        </Card>
+          {t("Start Daily Check-In", "بدء التسجيل اليومي")}
+        </Button>
 
         {/* Today's Status */}
         {todayCheckIn ? (
@@ -117,7 +124,7 @@ export default function CheckInPage() {
                 variant="ghost"
                 className="mt-3"
                 style={{ color: "var(--primary)" }}
-                onClick={() => navigate(createPageUrl("CheckInForm"))}
+                onClick={() => navigate("/check-in-form")}
               >
                 {t("Update Check-In", "تحديث التسجيل")}
               </Button>
@@ -129,7 +136,7 @@ export default function CheckInPage() {
               {t("You haven't checked in today yet", "لم تسجل دخولك اليوم بعد")}
             </p>
             <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
-              {t("Choose an option above to get started", "اختر خيارًا أعلاه للبدء")}
+              {t("Complete your check-in to access personalized exercises", "أكمل تسجيلك للوصول إلى التمارين المخصصة")}
             </p>
           </Card>
         )}

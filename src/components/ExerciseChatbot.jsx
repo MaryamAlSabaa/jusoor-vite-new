@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ExerciseRecommender } from '../integrations/ExerciseRecommender';
 import { Button, Card } from './index';
 import { Send, Activity, Heart, AlertTriangle, Clock } from 'lucide-react';
+import { ChatBaseAI } from '../integrations/ChatBaseAI'; // ADD THIS IMPORT
+import { checkIn } from '../Entities/CheckIn'; // ADD THIS IMPORT
+import { format } from 'date-fns'; // ADD THIS IMPORT
 
 export default function ExerciseChatbot({ user, isRTL, onClose }) {
   const [conversationStage, setConversationStage] = useState('welcome');
@@ -72,22 +75,34 @@ export default function ExerciseChatbot({ user, isRTL, onClose }) {
     }
   };
 
-  const generateRecommendations = async () => {
-    setIsLoading(true);
-    try {
-      const exercises = await ExerciseRecommender.getPersonalizedExercises(user, userResponses);
-      const advice = ExerciseRecommender.generateSafetyAdvice(user, userResponses, exercises);
-      
-      setRecommendedExercises(exercises);
-      setSafetyAdvice(advice);
-      setConversationStage('results');
-    } catch (error) {
-      console.error('Error generating recommendations:', error);
-      setConversationStage('error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+const generateRecommendations = async () => {
+  setIsLoading(true);
+  try {
+    console.log("Getting AI exercise recommendations...");
+
+    const today = format(new Date(), "yyyy-MM-dd");
+    const checkIns = await checkIn.filter({ 
+      check_in_date: today, 
+      created_by: user.email 
+    });
+    const todayCheckIn = checkIns.length > 0 ? checkIns[0] : null;
+
+    const recommendations = await ChatBaseAI.getExerciseRecommendations(user, todayCheckIn, userResponses);
+
+    console.log("AI recommendations:", recommendations);
+
+    setRecommendedExercises(recommendations.exercises || []);
+    setSafetyAdvice(recommendations.safety_advice || []);
+    setConversationStage('results');
+  } catch (error) {
+    console.error('Error generating recommendations:', error);
+    setConversationStage('error');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const renderCurrentStep = () => {
     const current = questions[conversationStage];

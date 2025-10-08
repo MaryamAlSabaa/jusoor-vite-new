@@ -3,26 +3,27 @@ import SpeechRecognitionPopup from "./components/SpeechRecognitionPopup";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { User } from "./Entities/User";
-import { Home, Activity, BookOpen, Clock, Settings, Mic } from "lucide-react";
+import { Home, Activity, BookOpen, Settings, Mic } from "lucide-react";
 
-export default function Layout({ currentPageName }) {
+export default function Layout() {
   const [showSpeechPopup, setShowSpeechPopup] = useState(false);
   const [user, setUser] = useState(null);
   const [isRTL, setIsRTL] = useState(false);
-  const location = useLocation(); // ADD this hook
+  const location = useLocation();
 
-  // Function to get current page from URL path
   const getCurrentPageFromPath = () => {
     const path = location.pathname;
     if (path === '/') return 'Home';
     if (path === '/exercises') return 'Exercises';
-    if (path === '/checkin-form') return 'checkin-form';
+    if (path === '/check-in-form') return 'CheckInForm';
+    if (path === '/check-in') return 'CheckIn';
     if (path === '/journal') return 'Journal';
     if (path === '/settings') return 'Settings';
     if (path === '/emergency') return 'Emergency';
     if (path === '/voice-check-in') return 'VoiceCheckIn';
     if (path === '/health-history') return 'HealthHistory';
-    if (path === '/checkin') return 'checkin';
+    if (path === '/patientReport') return 'PatientReport';
+    if (path === '/BookAppointment') return 'BookAppointment';
     return 'Home';
   };
 
@@ -42,11 +43,6 @@ export default function Layout({ currentPageName }) {
     }
   };
 
-  // Skip layout for onboarding page
-  if (currentPageName === "Onboarding") {
-    return <Outlet />;
-  }
-
   const navItems = [
     { name: "Home", nameAr: "الرئيسية", icon: Home, page: "Home" },
     { name: "Exercises", nameAr: "التمارين", icon: Activity, page: "Exercises" },
@@ -60,8 +56,7 @@ export default function Layout({ currentPageName }) {
       <style>{`
         :root {
           --primary: #3AB4B4;
-            --primary-50: #51c6c6d7;
-
+          --primary-50: #51c6c6d7;
           --primary-100: rgba(0,162,157,0.20);
           --primary-200: rgba(0,162,157,0.40);
           --primary-300: rgba(0,162,157,0.60);
@@ -73,11 +68,9 @@ export default function Layout({ currentPageName }) {
           --muted-text: #666666;
           --strong-text: #0B2B2B;
           --error: #D9534F;
-                    --errorMic: #cd7e7cff;
-
+          --errorMic: #cd7e7cff;
           --success: #2E7D32;
-          
-          --gradient:  linear-gradient(135deg, var(--primary-100) 0%, var(--primary-200) 100%);
+          --gradient: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-200) 100%);
         }
         body {
           background-color: var(--bg);
@@ -104,7 +97,7 @@ export default function Layout({ currentPageName }) {
           <div className="flex items-center justify-around h-20">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPage === item.page; // CHANGED: currentPageName → currentPage
+              const isActive = currentPage === item.page;
 
               if (item.isCenter) {
                 return (
