@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom"; // ADD useLocation
+import SpeechRecognitionPopup from "./components/SpeechRecognitionPopup";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { User } from "./Entities/User";
 import { Home, Activity, BookOpen, Clock, Settings, Mic } from "lucide-react";
 
 export default function Layout({ currentPageName }) {
+  const [showSpeechPopup, setShowSpeechPopup] = useState(false);
   const [user, setUser] = useState(null);
   const [isRTL, setIsRTL] = useState(false);
   const location = useLocation(); // ADD this hook
@@ -48,7 +50,7 @@ export default function Layout({ currentPageName }) {
   const navItems = [
     { name: "Home", nameAr: "الرئيسية", icon: Home, page: "Home" },
     { name: "Exercises", nameAr: "التمارين", icon: Activity, page: "Exercises" },
-    { name: "Check-In", nameAr: "التسجيل اليومي", icon: Clock, page: "checkin-form", isCenter: true },
+    { name: "Voice", nameAr: "الصوت", icon: Mic, page: "SpeechRecognition", isCenter: true },
     { name: "Journal", nameAr: "اليوميات", icon: BookOpen, page: "Journal" },
     { name: "Settings", nameAr: "الإعدادات", icon: Settings, page: "Settings" },
   ];
@@ -57,7 +59,9 @@ export default function Layout({ currentPageName }) {
     <div dir={isRTL ? "rtl" : "ltr"}>
       <style>{`
         :root {
-          --primary: #00A29D;
+          --primary: #3AB4B4;
+            --primary-50: #51c6c6d7;
+
           --primary-100: rgba(0,162,157,0.20);
           --primary-200: rgba(0,162,157,0.40);
           --primary-300: rgba(0,162,157,0.60);
@@ -69,7 +73,11 @@ export default function Layout({ currentPageName }) {
           --muted-text: #666666;
           --strong-text: #0B2B2B;
           --error: #D9534F;
+                    --errorMic: #cd7e7cff;
+
           --success: #2E7D32;
+          
+          --gradient:  linear-gradient(135deg, var(--primary-100) 0%, var(--primary-200) 100%);
         }
         body {
           background-color: var(--bg);
@@ -100,11 +108,12 @@ export default function Layout({ currentPageName }) {
 
               if (item.isCenter) {
                 return (
-                  <Link
+                  <button
                     key={item.page}
-                    to={createPageUrl(item.page)}
-                    className="flex flex-col items-center justify-center -mt-8"
+                    type="button"
+                    className="flex flex-col items-center justify-center -mt-8 bg-transparent border-none outline-none"
                     aria-label={isRTL ? item.nameAr : item.name}
+                    onClick={() => setShowSpeechPopup(true)}
                   >
                     <div
                       className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
@@ -121,7 +130,7 @@ export default function Layout({ currentPageName }) {
                     >
                       {isRTL ? item.nameAr : item.name}
                     </span>
-                  </Link>
+                  </button>
                 );
               }
 
@@ -151,6 +160,9 @@ export default function Layout({ currentPageName }) {
           </div>
         </div>
       </nav>
+      {showSpeechPopup && (
+        <SpeechRecognitionPopup onClose={() => setShowSpeechPopup(false)} />
+      )}
     </div>
   );
 }

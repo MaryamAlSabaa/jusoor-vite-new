@@ -4,6 +4,8 @@ import { Button, Card } from "../components";
 import { Mic, BookOpen, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { User } from "../Entities/User";
+import SpeechToText from "../components/SpeechToText.jsx";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 export default function JournalPage() {
   const [user, setUser] = useState(null);
@@ -11,6 +13,7 @@ export default function JournalPage() {
   const [entries, setEntries] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [newEntry, setNewEntry] = useState("");
+  const { transcript, resetTranscript } = useSpeechRecognition();
 
   useEffect(() => {
     loadData();
@@ -22,8 +25,8 @@ export default function JournalPage() {
       setUser(userData);
       setIsRTL(userData.language_preference === "ar");
 
-      const journalEntries = await Journal.list("-entry_date", 20);
-      setEntries(journalEntries);
+      // const journalEntries = await Journal.list("-entry_date", 20);
+      // setEntries(journalEntries);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -31,13 +34,14 @@ export default function JournalPage() {
 
   const handleStartRecording = () => {
     setIsRecording(true);
-    // Simulate recording
-    setTimeout(() => {
-      setIsRecording(false);
-      setNewEntry(isRTL 
-        ? "اليوم كان يوماً جيداً. شعرت بمزيد من الطاقة وتمكنت من المشي في الحديقة."
-        : "Today was a good day. I felt more energetic and managed to take a walk in the park.");
-    }, 3000);
+    resetTranscript();
+    SpeechRecognition.startListening({ continuous: true, language: isRTL ? "ar-SA" : "en-US" });
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    SpeechRecognition.stopListening();
+    setNewEntry(transcript); // Save the transcript only when stopped
   };
 
   const handleSaveEntry = async () => {
@@ -53,6 +57,10 @@ export default function JournalPage() {
     } catch (error) {
       console.error("Error saving entry:", error);
     }
+  };
+
+  const handleSpeechTranscript = (transcript) => {
+    setNewEntry(transcript);
   };
 
   const emotionColors = {
@@ -89,27 +97,48 @@ export default function JournalPage() {
 
         {/* New Entry */}
         <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
-          <h3 className="font-semibold mb-4" style={{ color: "var(--strong-text)" }}>
-            {isRTL ? "تسجيل جديد" : "New Entry"}
-          </h3>
-          
-          {!newEntry ? (
+          {!isRecording && !newEntry && (
             <button
               onClick={handleStartRecording}
-              disabled={isRecording}
               className="w-full p-8 rounded-xl flex flex-col items-center justify-center transition-all"
               style={{
-                backgroundColor: isRecording ? "var(--error)" : "var(--primary-100)",
-                border: `2px dashed ${isRecording ? "var(--error)" : "var(--primary)"}`,
+                backgroundColor: "var(--primary-100)",
+                border: `2px dashed var(--primary)`,
               }}
             >
-              <Mic className="w-12 h-12 mb-3" style={{ color: isRecording ? "var(--error)" : "var(--primary)" }} />
+              <Mic className="w-12 h-12 mb-3" style={{ color: "var(--primary)" }} />
               <p className="font-medium" style={{ color: "var(--strong-text)" }}>
-                {isRecording ? (isRTL ? "جاري التسجيل..." : "Recording...") : (isRTL ? "اضغط للتسجيل" : "Tap to Record")}
+                {isRTL ? "اضغط للتسجيل" : "Tap to Record"}
               </p>
             </button>
-          ) : (
-            <div className="space-y-4">
+          )}
+
+          {isRecording && (
+            <button
+              onClick={handleStopRecording}
+              className="w-full p-8 rounded-xl flex flex-col items-center justify-center transition-all"
+              style={{
+                backgroundColor: "var(--error)",
+                border: `2px dashed var(--error)`,
+              }}
+            >
+              <Mic className="w-12 h-12 mb-3" style={{ color: "var(--errorMic)" }} />
+              <p className="font-medium" style={{ color: "var(--strong-text)" }}>
+                {isRTL ? "جاري التسجيل... اضغط للإيقاف" : "Listening ... Tap to Stop"}
+              </p>
+            </button>
+          )}
+
+          {/* <div className="mt-2"> */}
+            {/* <strong>{isRTL ? "معاينة التسجيل:" : "Entry Preview:"}</strong> */}
+            {/* <div className="bg-gray-100 rounded p-2 mt-1 min-h-[40px]">{isRecording ? transcript : newEntry}</div> */}
+          {/* </div> */}
+
+          {newEntry && (
+            <div className="space-y-4 mt-4">
+                <h3 className="font-semibold mb-3" style={{ color: "var(--primary)" }}>
+              {isRTL ? "ما قلته:" : "What you said:"}
+            </h3>
               <div className="p-4 rounded-xl" style={{ backgroundColor: "var(--primary-100)" }}>
                 <p style={{ color: "var(--strong-text)" }}>
                   {newEntry}
@@ -134,6 +163,10 @@ export default function JournalPage() {
               </div>
             </div>
           )}
+          <div className="mb-6">
+            <SpeechToText onTranscript={handleSpeechTranscript} />
+           
+          </div>
         </Card>
 
         {/* Past Entries */}

@@ -3,14 +3,15 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { checkIn } from "../Entities/CheckIn";
 import { HealthData } from "../Entities/HealthData";
-// import { VoiceCheckIn } from "../Entities/CheckIn";
-import { Button, Card, HealthCard } from "../components";
+import { Button, Card, HealthCard, MedicationCard } from "../components";
+import logo from '../assets/logo.png';
 import { Mic, Activity, TrendingUp, AlertCircle, Heart, 
   Moon,
   Calendar,
   BookOpen,
   Dumbbell,
   Phone,
+  Bell, Check,
   Plus,
   Stethoscope,
   Share2,
@@ -115,9 +116,9 @@ const loadData = async () => {
             </p>
           </div>
           <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_68dad9aa5e121be8a4ab5da6/ba0abaca3_image.png"
-            alt="Jusoor butterfly logo"
-            className="w-16 h-16 object-contain"
+            src={logo}
+            alt="Jusoor logo"
+            className="w-21 h-20 object-contain"
           />
         </div>
 
@@ -144,19 +145,21 @@ const loadData = async () => {
             </p>
           </Card>
         </Link>
-<a className="block" href="/DoctorReport">
-  <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full nabdh-button">
-    {/* FIXED: Changed stroke-linecap to strokeLinecap, stroke-linejoin to strokeLinejoin */}
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-share2 w-4 h-4 mr-2 text-[var(--nabdh-primary)]">
-      <circle cx="18" cy="5" r="3"></circle>
-      <circle cx="6" cy="12" r="3"></circle>
-      <circle cx="18" cy="19" r="3"></circle>
-      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
-      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
-    </svg>Share Report
-  </button>
-</a>
+        <a data-linenumber="233" data-dynamic-content="true" className="block" href="/patientReport">
+          <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm 
+                  font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 
+                  focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 
+                  [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-background 
+                  hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full "  data-linenumber="234" data-dynamic-content="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-share2 w-4 h-4 mr-2 text-[var(--nabdh-primary)]" data-source-location="pages/Dashboard:235:10" data-dynamic-content="false">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                    <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
+                  </svg>My Reports
+          </button>
+        </a>
         {/* Today's Status */}
         {todayCheckIn ? (
           <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
@@ -231,7 +234,7 @@ const loadData = async () => {
 
         {/* Health Status Cards */}
        <h2 className="text-lg font-semibold text-[var(--strong-text)] mb-2">
-          {isRTL ? "حالة اليوم" : "Today's Status"}
+          {isRTL ? "حالة اليوم" : "Your Health Today"}
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
@@ -240,48 +243,49 @@ const loadData = async () => {
             value="--"
             subtitle="BPM"
             icon={Heart}
-            color="primary"
+            color="heartRate"
           />
           <HealthCard 
             title={isRTL ? "الخطوات" : "Steps"}
             value="--"
             subtitle="steps"
             icon={Activity}
-            color="success"
+            color="steps"
           />
           <HealthCard 
             title={isRTL ? "النوم" : "Sleep"}
             value="--"
             subtitle="hours"
             icon={Moon}
-            color="info"
+            color="sleep"
           />
           <HealthCard 
             title={isRTL ? "المزاج" : "Mood"}
             value={todayCheckIn ? "😊" : "--"}
             icon={TrendingUp}
-            color={todayCheckIn ? "success" : "warning"}
+            color={todayCheckIn ? "mood" : "noMood"}
           />
         </div>
-         {/* My Medications
+         {/* My Medications */}
       <section className="space-y-4">
-        <h2 className={`text-lg font-semibold text-[var(--nabdh-secondary)] ${language === 'ar' ? 'arabic-font' : ''}`}>
-          {getText('myMedications')}
-        </h2>
-        {activeMedications.length === 0 ? (
-          <Card className="border-dashed border-2 border-gray-200">
-            <CardContent className="p-6 text-center">
-              <Pill className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className={`text-gray-500 ${language === 'ar' ? 'arabic-font' : ''}`}>
-                {getText('noMedications')}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {activeMedications.map(med => <MedicationCard key={med.id} medication={med} onTake={handleTakeMedication} language={language} />)}
-          </div>
-        )}
+        <h2 className={`text-lg font-semibold text-[var(--nabdh-secondary)] `}>
+          Medications </h2>
+
+        {/* Example of active medication */}
+        <MedicationCard
+          name="Tecfidera"
+          dosage="240mg"
+          frequency="Twice Daily"
+          color="info"
+          time = {["9:00 AM", "9:00 PM"]}
+        />
+         <MedicationCard
+          name="Vitamin D"
+          dosage="5000 IU"
+          frequency="One Daily"
+          color="info"
+           time = {["9:00 AM"]}
+        />
       </section>
 
       {/* Upcoming Appointments */}

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import { Pill, Check, Bell } from "lucide-react";
 
-// Simple Button
 export const Button = ({ children, onClick, variant, style, ...props }) => {
   return (
     <button
@@ -33,7 +33,26 @@ export const Card = ({ children, style, className = "" }) => {
     </div>
   );
 };
-export function MedicationCard({ name, dosage, frequency, icon: Icon, color }) {
+
+
+export function MedicationCard({
+  name,
+  dosage,
+  frequency,
+  color = "primary",
+  medication,
+  time=[],
+  onTake = () => {},
+  language = "en",
+  getText = (key) => key,
+}) {
+  const [taken, setTaken] = useState(false);
+
+  const handleTake = () => {
+    setTaken(true);
+    onTake(medication);
+  };
+
   const colorMap = {
     primary: "bg-teal-500 text-white",
     success: "bg-green-500 text-white",
@@ -42,27 +61,85 @@ export function MedicationCard({ name, dosage, frequency, icon: Icon, color }) {
   };
 
   return (
-    <div className="rounded-lg text-card-foreground shadow-sm nabdh-shadow border-0 transition-all duration-300 bg-white">
+    <div className="relative rounded-lg shadow-sm border-0 transition-all duration-300 bg-gray-50">
       <div className="p-4">
+        {/* Top right take button */}
+        <div className="absolute top-3 right-3">
+          <Button
+            size="sm"
+            onClick={handleTake}
+            disabled={taken}
+            className={`button flex items-center gap-1 ${
+              taken
+                ? " text-black hover:bg-blue-500"
+                : " text-black"
+            }`}
+            style={!taken ? { background: "var(--primary-300)" } : {background: "var(--primary-100)"}}
+
+          >
+            {taken ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Bell className="w-4 h-4" />
+            )}
+            <span className={`${language === "ar" ? "arabic-font" : ""}`}>
+              {taken ? getText("taken") : getText("take")}
+            </span>
+          </Button>
+        </div>
+
+        {/* Main content */}
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              {/* FIXED: Changed stroke-linecap to strokeLinecap, stroke-linejoin to strokeLinejoin */}
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                className="lucide lucide-pill w-4 h-4 text-[var(--nabdh-primary)]">
-                <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path>
-                <path d="m8.5 8.5 7 7"></path>
-              </svg>
-              <h3 className="font-semibold text-[var(--nabdh-secondary)]">Tecfidera</h3>
+              <Pill className="w-5 h-5 text-[var(--primary-200)]" />
+              <h3 className="font-semibold text-[var(--primary)]">
+                {name }
+              </h3>
             </div>
-            <p className="text-sm text-gray-600 mb-3">240mg - Twice Daily</p>
+            <p className="text-sm text-gray-600 mb-3">
+              {dosage } – {frequency}
+            </p>
+             {/* Display each time in its own badge */}
+            <div className="flex gap-2 flex-wrap">
+              {Array.isArray(time) &&
+                time.map((t, index) => (
+                  <div
+                    key={index}
+                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold 
+                    transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-clock w-3 h-3 mr-1"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    {t}
+                  </div>
+                ))}
+            </div>
           </div>
+          {/* <div
+            className={`w-10 h-10 flex items-center justify-center rounded-full ${colorMap[color]}`}
+          > */}
+            <Pill className="w-4 h-4" />
+          {/* </div> */}
         </div>
       </div>
     </div>
   );
 }
+
 
 export const Switch = ({ checked, onCheckedChange, style = {}, ...props }) => {
   const toggle = () => onCheckedChange && onCheckedChange(!checked);
@@ -98,12 +175,12 @@ export const Switch = ({ checked, onCheckedChange, style = {}, ...props }) => {
   );
 };
 export function HealthCard({ title, value, subtitle, icon: Icon, color }) {
-  const colorMap = {
-    primary: "bg-teal-500 text-white",
-    success: "bg-green-500 text-white",
-    info: "bg-blue-500 text-white",
-    warning: "bg-yellow-400 text-black",
-  };
+const colorMap = {
+  heartRate: "bg-[#F4D6D8] text-[#5A2E2E]", // Pale rose with muted text
+  steps: "bg-[#D8EAD2] text-[#2E402E]",      // Misty green with dark olive text
+  sleep: "bg-[#D8D6F2] text-[#3A3A58]",      // Soft lavender with slate text
+  mood: "bg-[#F9E0D9] text-[#5A3B35]",       // Gentle peach with soft brown text
+};
 
   return (
       <div
@@ -111,7 +188,7 @@ export function HealthCard({ title, value, subtitle, icon: Icon, color }) {
     >
       {/* Left: Text */}
       <div className="flex-1 pr-4">
-        <p className="text-white/80 text-lg font-semibold">{title}</p>
+        <p className=" text-lg font-semibold">{title}</p>
         <p className="text-3xl font-bold mt-1">{value}</p>
         {subtitle && <span className="text-sm opacity-80">{subtitle}</span>}
       </div>
