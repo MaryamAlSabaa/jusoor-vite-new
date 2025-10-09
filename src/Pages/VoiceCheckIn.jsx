@@ -37,7 +37,7 @@ export default function VoiceCheckIn() {
       setIsRecording(false);
       setTranscript(isRTL 
         ? "أشعر بالتعب قليلاً اليوم، لكن مزاجي جيد. يمكنني المشي بشكل مستقل."
-        : "I'm feeling a bit tired today, but my mood is good. I can walk independently.");
+        : "Feeling tired but can walk.");
     }, 3000);
   };
 
