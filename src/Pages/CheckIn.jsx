@@ -1,51 +1,45 @@
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { Card, Button } from "../components";
 import { User } from "../Entities/User";
 import { checkIn } from "../Entities/CheckIn";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { BookOpen } from "lucide-react";
-
 export default function CheckIn() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [todayCheckIn, setTodayCheckIn] = useState(null);
+  const { language, isRTL } = useAccessibility();
 
   useEffect(() => {
     loadUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   const loadUser = async () => {
-  try {
-    const userData = await User.me();
-    setUser(userData);
-    setIsRTL(userData.language_preference === "ar");
-
-    const today = format(new Date(), "yyyy-MM-dd");
-
-    // Check in localStorage
-    const localCheckIn = localStorage.getItem("currentCheckIn");
-    if (localCheckIn) {
-      const parsed = JSON.parse(localCheckIn);
-      if (parsed.check_in_date === today && parsed.created_by === userData.email) {
-        setTodayCheckIn(parsed);
-        return;
+    try {
+      const userData = await User.me();
+      setUser(userData);
+      const today = format(new Date(), "yyyy-MM-dd");
+      // Check in localStorage
+      const localCheckIn = localStorage.getItem("currentCheckIn");
+      if (localCheckIn) {
+        const parsed = JSON.parse(localCheckIn);
+        if (parsed.check_in_date === today && parsed.created_by === userData.email) {
+          setTodayCheckIn(parsed);
+          return;
+        }
       }
+      // Otherwise look up ALL check-ins but filter to today's
+      const checkIns = await checkIn.list();
+      const todayCheck = checkIns.find(
+        c => c.check_in_date === today && c.created_by === userData.email
+      );
+      setTodayCheckIn(todayCheck || null);
+    } catch (error) {
+      console.error("Error loading user:", error);
     }
-
-    // Otherwise look up ALL check-ins but filter to today's
-    const checkIns = await checkIn.list();
-    const todayCheck = checkIns.find(
-      c => c.check_in_date === today && c.created_by === userData.email
-    );
-
-    setTodayCheckIn(todayCheck || null);
-  } catch (error) {
-    console.error("Error loading user:", error);
-  }
-};
-
+  };
 
   const t = (en, ar) => (isRTL ? ar : en);
 

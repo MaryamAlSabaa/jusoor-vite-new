@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { Card, Button } from "../components";
 import { createPageUrl } from "../utils";
 import { User } from "../Entities/User";
 import { checkIn } from "../Entities/CheckIn";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-
 export default function CheckInForm() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [fatigue, setFatigue] = useState(null);
   const [mood, setMood] = useState(null);
   const [mobility, setMobility] = useState(null);
@@ -17,23 +15,26 @@ export default function CheckInForm() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { language, isRTL } = useAccessibility();
 
   useEffect(() => {
     loadUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   const loadUser = async () => {
     try {
       const userData = await User.me();
       setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
     } catch (error) {
       console.error("Error loading user:", error);
       // Use fallback user data
       setUser({ full_name: "Test User", email: "test@example.com", language_preference: "en" });
-      setIsRTL(false);
     }
   };
+
+
+  const t = (en, ar) => (isRTL ? ar : en);
 
   const moods = [
     { key: "very_happy", emoji: "😄", en: "Very Happy", ar: "سعيد جدًا" },
@@ -44,11 +45,18 @@ export default function CheckInForm() {
   ];
 
   const symptomOptions = [
-    "Numbness", "Weakness", "Vision Issues", "Balance Problems", "Memory Fog",
-    "Tingling", "Spasticity", "Dizziness", "Heat Sensitivity", "Bladder Issues", "Bowel Issues",
+    t("Numbness", "خدر"),
+    t("Weakness", "ضعف"),
+    t("Vision Issues", "مشاكل في الرؤية"),
+    t("Balance Problems", "مشاكل التوازن"),
+    t("Memory Fog", "تشوش الذاكرة"),
+    t("Tingling", "تنميل"),
+    t("Spasticity", "تشنج"),
+    t("Dizziness", "دوار"),
+    t("Heat Sensitivity", "حساسية للحرارة"),
+    t("Bladder Issues", "مشاكل المثانة"),
+    t("Bowel Issues", "مشاكل الأمعاء"),
   ];
-
-  const t = (en, ar) => (isRTL ? ar : en);
 
   const toggleSymptom = (s) => {
     const next = new Set(symptoms);
@@ -57,58 +65,58 @@ export default function CheckInForm() {
   };
 
   const onSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  // validation
-  if (!fatigue) return setError(t("Please select fatigue.", "يرجى اختيار مستوى الإرهاق"));
-  if (!mood) return setError(t("Please select your mood.", "يرجى اختيار حالتك المزاجية."));
-  if (!mobility) return setError(t("Please select mobility.", "يرجى اختيار القدرة الحركية"));
+    // validation
+    if (!fatigue) return setError(t("Please select fatigue.", "يرجى اختيار مستوى الإرهاق"));
+    if (!mood) return setError(t("Please select your mood.", "يرجى اختيار حالتك المزاجية."));
+    if (!mobility) return setError(t("Please select mobility.", "يرجى اختيار القدرة الحركية"));
 
-  const payload = {
-    check_in_date: format(new Date(), "yyyy-MM-dd"),
-    created_by: user?.email || "test@example.com",
-    fatigue_level: fatigue,
-    mood: mood,
-    mobility_level: mobility,
-    symptoms: Array.from(symptoms),
-    notes: notes?.trim() || null,
-    pain_level: 0
-  };
-
-  try {
-    setSubmitting(true);
-    console.log("💾 SAVING CHECK-IN:", payload);
-
-    // Force save to localStorage FIRST
-    const result = {
-      id: Date.now(),
-      ...payload,
-      created_at: new Date().toISOString()
+    const payload = {
+      check_in_date: format(new Date(), "yyyy-MM-dd"),
+      created_by: user?.email || "test@example.com",
+      fatigue_level: fatigue,
+      mood: mood,
+      mobility_level: mobility,
+      symptoms: Array.from(symptoms),
+      notes: notes?.trim() || null,
+      pain_level: 0
     };
-    
-    // Save directly to localStorage
-    localStorage.setItem("currentCheckIn", JSON.stringify(result));
-    console.log("✅ DIRECT SAVE to localStorage:", result);
-    
-    // Also save via checkIn entity for compatibility
-    if (checkIn?.create) {
-      await checkIn.create(payload);
+
+    try {
+      setSubmitting(true);
+      console.log("💾 SAVING CHECK-IN:", payload);
+
+      // Force save to localStorage FIRST
+      const result = {
+        id: Date.now(),
+        ...payload,
+        created_at: new Date().toISOString()
+      };
+      
+      // Save directly to localStorage
+      localStorage.setItem("currentCheckIn", JSON.stringify(result));
+      console.log("✅ DIRECT SAVE to localStorage:", result);
+      
+      // Also save via checkIn entity for compatibility
+      if (checkIn?.create) {
+        await checkIn.create(payload);
+      }
+      
+      // Wait a moment to ensure save completes
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Force reload of Exercises page
+      window.location.href = '/exercises';
+      
+    } catch (err) {
+      console.error("❌ Error saving check-in:", err);
+      setError(t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."));
+    } finally {
+      setSubmitting(false);
     }
-    
-    // Wait a moment to ensure save completes
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Force reload of Exercises page
-    window.location.href = '/exercises';
-    
-  } catch (err) {
-    console.error("❌ Error saving check-in:", err);
-    setError(t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."));
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen p-6 pb-24" dir={isRTL ? "rtl" : "ltr"}>

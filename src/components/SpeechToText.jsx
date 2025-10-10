@@ -1,9 +1,23 @@
-import React from "react";
 import { useSpeechRecognition } from "react-speech-recognition";
+import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 
 export default function SpeechToText({ onTranscript }) {
   const { transcript: sttTranscript, listening: sttListening, resetTranscript: resetSttTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+const { isRTL, language } = useAccessibility();
+  const t = (en, ar) => (isRTL ? ar : en);
 
+    useEffect(() => {
+    loadUser();
+    }, [language]);
+  const loadUser = async () => {
+  try {
+    const userData = await User.me();
+    setUser(userData);
+  } catch (error) {
+    console.error("Error loading user:", error);
+  }
+  };
   React.useEffect(() => {
     if (onTranscript) onTranscript(sttTranscript);
   }, [sttTranscript, onTranscript]);
@@ -29,7 +43,8 @@ export default function SpeechToText({ onTranscript }) {
         onClick={resetSttTranscript}
         disabled={!sttTranscript}
       >
-        Reset
+        {t("Reset", "إعادة تعيين")} 
+
       </button>
       
     </div>

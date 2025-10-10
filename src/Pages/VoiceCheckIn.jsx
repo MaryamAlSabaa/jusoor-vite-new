@@ -4,27 +4,29 @@ import { createPageUrl } from "../utils";
 import { checkIn } from "../Entities/CheckIn";
 import { Button, Card } from "../components";
 import { Mic, MicOff, Loader2 } from "lucide-react";
-// import { InvokeLLM } from "../integrations/Core";
 import { format } from "date-fns";
 import { User } from "../Entities/User";
+import { useAccessibility } from "../Entities/AccessibilityContext";
+
 
 export default function VoiceCheckIn() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const { isRTL, language } = useAccessibility();
+  const t = (en, ar) => (isRTL ? ar : en);
 
   useEffect(() => {
     loadUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   const loadUser = async () => {
     try {
       const userData = await User.me();
       setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
     } catch (error) {
       console.error("Error loading user:", error);
     }
@@ -85,10 +87,10 @@ export default function VoiceCheckIn() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
-            {isRTL ? "تسجيل دخول صوتي" : "Voice Check-In"}
+            {t("Voice Check-In", "تسجيل دخول صوتي")}
           </h1>
           <p style={{ color: "var(--muted-text)" }}>
-            {isRTL ? "أخبرنا كيف تشعر اليوم" : "Tell us how you're feeling today"}
+            {t("Tell us how you're feeling today", "أخبرنا كيف تشعر اليوم")}
           </p>
         </div>
 
@@ -111,9 +113,9 @@ export default function VoiceCheckIn() {
           </button>
 
           <p className="mt-6 text-lg font-medium" style={{ color: "var(--strong-text)" }}>
-            {isRecording && (isRTL ? "جاري الاستماع..." : "Listening...")}
-            {!isRecording && !transcript && (isRTL ? "اضغط للتحدث" : "Tap to Speak")}
-            {transcript && (isRTL ? "تم التسجيل" : "Recorded")}
+            {isRecording && t("Listening...", "جاري الاستماع...")}
+            {!isRecording && !transcript && t("Tap to Speak", "اضغط للتحدث")}
+            {transcript && t("Recorded", "تم التسجيل")}
           </p>
         </Card>
 
@@ -121,7 +123,7 @@ export default function VoiceCheckIn() {
         {transcript && (
           <Card className="p-6" style={{ backgroundColor: "var(--primary-100)" }}>
             <h3 className="font-semibold mb-3" style={{ color: "var(--primary)" }}>
-              {isRTL ? "ما قلته:" : "What you said:"}
+              {t("What you said:", "ما قلته:")}
             </h3>
             <p style={{ color: "var(--strong-text)" }}>
               {transcript}
@@ -137,7 +139,7 @@ export default function VoiceCheckIn() {
               className="w-full h-14 text-lg font-semibold rounded-xl"
               style={{ backgroundColor: "var(--success)", color: "white" }}
             >
-              {isRTL ? "حفظ التسجيل" : "Save Check-In"}
+              {t("Save Check-In", "حفظ التسجيل")}
             </Button>
             <Button
               onClick={() => setTranscript("")}
@@ -145,7 +147,7 @@ export default function VoiceCheckIn() {
               className="w-full h-14 text-lg font-semibold rounded-xl"
               style={{ borderColor: "var(--primary-200)", color: "var(--primary)" }}
             >
-              {isRTL ? "إعادة التسجيل" : "Try Again"}
+              {t("Try Again", "إعادة التسجيل")}
             </Button>
           </div>
         )}
@@ -154,7 +156,7 @@ export default function VoiceCheckIn() {
           <div className="flex items-center justify-center gap-3 py-8">
             <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--primary)" }} />
             <p style={{ color: "var(--muted-text)" }}>
-              {isRTL ? "جاري المعالجة..." : "Processing..."}
+              {t("Processing...", "جاري المعالجة...")}
             </p>
           </div>
         )}
@@ -162,13 +164,13 @@ export default function VoiceCheckIn() {
         {/* Helper Text */}
         <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
           <h4 className="font-semibold mb-2" style={{ color: "var(--strong-text)" }}>
-            {isRTL ? "ماذا تقول؟" : "What to say?"}
+            {t("What to say?", "ماذا تقول؟")}
           </h4>
           <ul className="space-y-2 text-sm" style={{ color: "var(--muted-text)" }}>
-            <li>• {isRTL ? "كيف تشعر من حيث الطاقة والتعب؟" : "How are you feeling energy-wise?"}</li>
-            <li>• {isRTL ? "ما هو مزاجك اليوم؟" : "What's your mood today?"}</li>
-            <li>• {isRTL ? "كيف حالتك الحركية؟" : "How is your mobility?"}</li>
-            <li>• {isRTL ? "هل تشعر بأي ألم؟" : "Any pain or discomfort?"}</li>
+            <li>• {t("How are you feeling energy-wise?", "كيف تشعر من حيث الطاقة والتعب؟")}</li>
+            <li>• {t("What's your mood today?", "ما هو مزاجك اليوم؟")}</li>
+            <li>• {t("How is your mobility?", "كيف حالتك الحركية؟")}</li>
+            <li>• {t("Any pain or discomfort?", "هل تشعر بأي ألم؟")}</li>
           </ul>
         </Card>
       </div>

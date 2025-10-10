@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { User } from "../Entities/User";
 import { EmergencyContact } from "../Entities/EmergencyContact";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 // import { SendEmail } from "../integrations/Core";
 import { Button, Card } from "../components";
 import { AlertCircle, Phone, MapPin, Plus, Shield } from "lucide-react";
 
 export default function Emergency() {
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [sosTriggered, setSosTriggered] = useState(false);
+  const { language, isRTL } = useAccessibility();
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [language]);
 
   const loadData = async () => {
     try {
       const userData = await User.me();
       setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
 
       const emergencyContacts = await EmergencyContact.list();
       setContacts(emergencyContacts);

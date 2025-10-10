@@ -4,13 +4,29 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { User } from "./Entities/User";
 import { Home, Activity, BookOpen, Settings, Mic } from "lucide-react";
+import { useAccessibility } from "./Entities/AccessibilityContext";
 
 export default function Layout() {
   const [showSpeechPopup, setShowSpeechPopup] = useState(false);
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
+  // const [isRTL, setIsRTL] = useState(false);
   const location = useLocation();
+  const { language, isRTL2 } = useAccessibility();
+  const t = (en, ar) => (isRTL2 ? ar : en);
 
+  useEffect(() => {
+    loadData();
+  }, [language]);
+
+   const loadData = async () => {
+      try {
+        const userData = await User.me();
+        setUser(userData);
+  
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
   const getCurrentPageFromPath = () => {
     const path = location.pathname;
     if (path === '/') return 'Home';
@@ -29,30 +45,17 @@ export default function Layout() {
 
   const currentPage = getCurrentPageFromPath();
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const userData = await User.me();
-      setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
-    } catch (error) {
-      console.error("Error loading user:", error);
-    }
-  };
 
   const navItems = [
-    { name: "Home", nameAr: "الرئيسية", icon: Home, page: "Home" },
-    { name: "Exercises", nameAr: "التمارين", icon: Activity, page: "Exercises" },
-    { name: "Voice", nameAr: "الصوت", icon: Mic, page: "SpeechRecognition", isCenter: true },
-    { name: "Journal", nameAr: "اليوميات", icon: BookOpen, page: "Journal" },
-    { name: "Settings", nameAr: "الإعدادات", icon: Settings, page: "Settings" },
+    { name: t("Home", "الرئيسية"), icon: Home, page: "Home" },
+    { name: t("Exercises", "التمارين"), icon: Activity, page: "Exercises" },
+    { name: t("Voice", "الصوت"), icon: Mic, page: "SpeechRecognition", isCenter: true },
+    { name: t("Journal", "اليوميات"), icon: BookOpen, page: "Journal" },
+    { name: t("Settings", "الإعدادات"), icon: Settings, page: "Settings" },
   ];
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"}>
+    <div dir={isRTL2 ? "rtl" : "ltr"}>
       <style>{`
         :root {
           --primary: #3AB4B4;
@@ -105,7 +108,7 @@ export default function Layout() {
                     key={item.page}
                     type="button"
                     className="flex flex-col items-center justify-center -mt-8 bg-transparent border-none outline-none"
-                    aria-label={isRTL ? item.nameAr : item.name}
+                    aria-label={item.name}
                     onClick={() => setShowSpeechPopup(true)}
                   >
                     <div
@@ -121,7 +124,7 @@ export default function Layout() {
                       className="text-xs mt-2 font-medium"
                       style={{ color: isActive ? "var(--primary)" : "var(--muted-text)" }}
                     >
-                      {isRTL ? item.nameAr : item.name}
+                      {item.name}
                     </span>
                   </button>
                 );
@@ -132,7 +135,7 @@ export default function Layout() {
                   key={item.page}
                   to={createPageUrl(item.page)}
                   className="flex flex-col items-center justify-center py-2 px-3 min-w-[60px]"
-                  aria-label={isRTL ? item.nameAr : item.name}
+                  aria-label={item.name}
                 >
                   <Icon
                     className="w-6 h-6 mb-1"
@@ -145,7 +148,7 @@ export default function Layout() {
                     className="text-xs font-medium"
                     style={{ color: isActive ? "var(--primary)" : "var(--muted-text)" }}
                   >
-                    {isRTL ? item.nameAr : item.name}
+                    {item.name}
                   </span>
                 </Link>
               );

@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Button } from "../components";
 import { ChevronRight, Mic, Bell, Heart, Type } from "lucide-react";
-import { User } from "../Entities/User";
-
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [accessibilityPreset, setAccessibilityPreset] = useState("standard");
-  const [language, setLanguage] = useState("en");
   const [user, setUser] = useState(null);
+  const { language, setLanguage } = useAccessibility();
 
   useEffect(() => {
     loadUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   const loadUser = async () => {
     try {
       const userData = await User.me();
       setUser(userData);
-      setLanguage(userData.language_preference || "en");
       setAccessibilityPreset(userData.accessibility_preset || "standard");
-
       // If already completed onboarding, redirect to home
       if (userData.onboarding_completed) {
         navigate(createPageUrl("Home"));
@@ -35,13 +33,11 @@ export default function Onboarding() {
   const handleComplete = async () => {
     try {
       if (!user) return;
-      
       await User.update(user.id, {
         language_preference: language,
         accessibility_preset: accessibilityPreset,
         onboarding_completed: true
       });
-      
       navigate(createPageUrl("Home"));
     } catch (error) {
       console.error("Onboarding error:", error);
@@ -78,6 +74,7 @@ export default function Onboarding() {
   const currentSlide = slides[step];
   const Icon = currentSlide?.icon;
   const isRTL = language === "ar";
+  const t = (en, ar) => (isRTL ? ar : en);
 
   if (step === 3) {
     return (
@@ -96,14 +93,14 @@ export default function Onboarding() {
           <div className="text-center mb-8">
             <Type className="w-16 h-16 mx-auto mb-4" style={{ color: "var(--primary)" }} />
             <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
-              {isRTL ? "اختر تفضيلاتك" : "Choose Your Preferences"}
+              {t("Choose Your Preferences", "اختر تفضيلاتك")}
             </h2>
           </div>
 
           {/* Language Selection */}
           <div>
             <p className="text-sm font-medium mb-3" style={{ color: "var(--muted-text)" }}>
-              {isRTL ? "اللغة" : "Language"}
+              {t("Language", "اللغة")}
             </p>
             <div className="flex gap-3">
               <button
@@ -132,7 +129,7 @@ export default function Onboarding() {
           {/* Accessibility Preset */}
           <div>
             <p className="text-sm font-medium mb-3" style={{ color: "var(--muted-text)" }}>
-              {isRTL ? "إمكانية الوصول" : "Accessibility"}
+              {t("Accessibility", "إمكانية الوصول")}
             </p>
             <div className="space-y-2">
               {[
@@ -149,7 +146,7 @@ export default function Onboarding() {
                     border: accessibilityPreset === preset.value ? "2px solid var(--primary)" : "2px solid var(--primary-200)"
                   }}
                 >
-                  {isRTL ? preset.labelAr : preset.label}
+                  {t(preset.label, preset.labelAr)}
                 </button>
               ))}
             </div>
@@ -160,7 +157,7 @@ export default function Onboarding() {
             className="w-full h-14 text-lg font-semibold rounded-xl"
             style={{ backgroundColor: "var(--primary)", color: "white" }}
           >
-            {isRTL ? "ابدأ" : "Get Started"}
+            {t("Get Started", "ابدأ")}
           </Button>
         </div>
       </div>

@@ -4,10 +4,9 @@ import { motion } from 'framer-motion';
 
 export const AppointmentCard = ({ doctor, specialty, date, time, location, type }) => {
   return (
-    <Card className="w-full border nabdh-shadow p-4">
-      <Card className="space-y-2">
+    <Card className="w-full bg-gray-50 p-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[var(--nabdh-secondary)]">{doctor}</h2>
+          <h2 className="text-lg font-bold">{doctor}</h2>
           <span className="text-sm text-gray-500 capitalize">{type}</span>
         </div>
         <p className="text-gray-600">{specialty}</p>
@@ -19,7 +18,6 @@ export const AppointmentCard = ({ doctor, specialty, date, time, location, type 
           <MapPin className="w-4 h-4" /> {location}
         </div>
       </Card>
-    </Card>
   );
 };
 

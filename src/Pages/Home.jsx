@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { checkIn } from "../Entities/CheckIn";
@@ -22,22 +23,84 @@ import { Mic, Activity, TrendingUp,ThermometerSun , AlertCircle, Heart,
   Beaker } from "lucide-react";
 import { format } from "date-fns";
 import { User } from "../Entities/User";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+
+function VoiceAssistantCheckIn({ questions, onComplete }) {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const { transcript, listening, resetTranscript } = useSpeechRecognition();
+
+  React.useEffect(() => {
+    if (!listening && transcript) {
+      setAnswers((prev) => [...prev, transcript]);
+      resetTranscript();
+      if (step < questions.length - 1) {
+        setStep(step + 1);
+        SpeechRecognition.startListening({ continuous: true });
+      } else {
+        onComplete && onComplete([...answers, transcript]);
+      }
+    }
+  }, [listening]);
+
+  const startAssistant = () => {
+    setStep(0);
+    setAnswers([]);
+    resetTranscript();
+    SpeechRecognition.startListening({ continuous: true });
+  };
+
+
+  return (
+    <div className="p-6 bg-white rounded-xl shadow-md mt-6">
+      <h3 className="text-xl font-bold mb-4">Voice Assistant Check-In</h3>
+      {step < questions.length ? (
+        <div>
+          <p className="mb-4 text-lg">{questions[step]}</p>
+          <button
+            onClick={startAssistant}
+            disabled={listening}
+            className="bg-primary text-white px-4 py-2 rounded mb-2"
+          >
+            {listening ? "Listening..." : "Start Answering"}
+          </button>
+          <div className="mt-2">
+            <strong>Transcript:</strong>
+            <div className="bg-gray-100 rounded p-2 mt-1 min-h-[40px]">{transcript}</div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <h4 className="mb-2">All questions answered!</h4>
+          <ul className="list-disc pl-6">
+            {answers.map((ans, idx) => (
+              <li key={idx}><strong>{questions[idx]}</strong>: {ans}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
+  // ...existing code...
+
   const [user, setUser] = useState(null);
   const [todayCheckIn, setTodayCheckIn] = useState(null);
   const [recentHealth, setRecentHealth] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [showTrend, setShowTrend] = useState(false);
+  const { isRTL, language } = useAccessibility();
+  const t = (en, ar) => (isRTL ? ar : en);
 
   const tempHistory = [
-  { time: "8 AM", temp: 36.5 },
-  { time: "10 AM", temp: 36.8 },
-  { time: "12 PM", temp: 37.0 },
-  { time: "2 PM", temp: 36.9 },
-  { time: "4 PM", temp: 37.1 },
-];
+    { time: t("8 AM", "٨ صباحًا"), temp: 36.5 },
+    { time: t("10 AM", "١٠ صباحًا"), temp: 36.8 },
+    { time: t("12 PM", "١٢ ظهرًا"), temp: 37.0 },
+    { time: t("2 PM", "٢ ظهرًا"), temp: 36.9 },
+    { time: t("4 PM", "٤ عصرًا"), temp: 37.1 },
+  ];
 
   useEffect(() => {
     loadData();
@@ -47,7 +110,7 @@ const loadData = async () => {
   try {
     const userData = await User.me();
     setUser(userData);
-    setIsRTL(userData.language_preference === "ar");
+  // setIsRTL(userData.language_preference === "ar"); // now handled by context
 
     // Get today's fatigue level
     const today = format(new Date(), "yyyy-MM-dd");
@@ -109,13 +172,13 @@ const loadData = async () => {
 
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return isRTL ? "صباح الخير" : "Good Morning";
-    if (hour < 18) return isRTL ? "مساء الخير" : "Good Afternoon";
-    return isRTL ? "مساء الخير" : "Good Evening";
+    if (hour < 12) return t("Good Morning", "صباح الخير");
+    if (hour < 18) return t("Good Afternoon", "مساء الخير");
+    return t("Good Evening", "مساء الخير");
   };
 
   return (
-    <div className="min-h-screen p-6 pb-24" dir={isRTL ? "rtl" : "ltr"}>
+  <div className="min-h-screen p-6 pb-24" dir={isRTL ? "rtl" : "ltr"}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -150,10 +213,10 @@ const loadData = async () => {
               <Mic className="w-12 h-12 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
-              {isRTL ? "تسجيل صوتي سريع" : "Quick Voice Check-In"}
+              {t("Quick Voice Check-In", "تسجيل صوتي سريع")}
             </h3>
             <p className="text-white text-opacity-90">
-              {isRTL ? "اضغط للتحدث عن شعورك اليوم" : "Tap to tell us how you're feeling today"}
+              {t("Tap to tell us how you're feeling today", "اضغط للتحدث عن شعورك اليوم")}
             </p>
           </Card>
         </Link>
@@ -169,7 +232,8 @@ const loadData = async () => {
                     <circle cx="18" cy="19" r="3"></circle>
                     <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
                     <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
-                  </svg>My Reports
+                  </svg>{t("My Reports", "تقاريري")}
+
           </button>
         </a>
         {/* Today's Status */}
@@ -178,13 +242,13 @@ const loadData = async () => {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "var(--success)" }} />
               <h3 className="font-semibold text-lg" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "تسجيل دخول اليوم مكتمل" : "Today's Check-In Complete"}
+                {t("Today's Check-In Complete", "تسجيل دخول اليوم مكتمل")}
               </h3>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                  {isRTL ? "الإرهاق" : "Fatigue"}
+                  {t("Fatigue", "الإرهاق")}
                 </p>
                 <p className="text-2xl font-bold" style={{ color: "var(--strong-text)" }}>
                   {todayCheckIn.fatigue_level}/10
@@ -192,7 +256,7 @@ const loadData = async () => {
               </div>
               <div>
                 <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                  {isRTL ? "المزاج" : "Mood"}
+                  {t("Mood", "المزاج")}
                 </p>
                 <p className="text-2xl">
                   {todayCheckIn.mood === "very_happy" && "😊"}
@@ -204,7 +268,7 @@ const loadData = async () => {
               </div>
               <div>
                 <p className="text-sm" style={{ color: "var(--muted-text)" }}>
-                  {isRTL ? "الألم" : "Pain"}
+                  {t("Pain", "الألم")}
                 </p>
                 <p className="text-2xl font-bold" style={{ color: "var(--strong-text)" }}>
                   {todayCheckIn.pain_level || 0}/10
@@ -217,7 +281,7 @@ const loadData = async () => {
             <div className="flex items-center gap-3">
               <AlertCircle className="w-6 h-6" style={{ color: "var(--accent)" }} />
               <p className="font-medium" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "لم تسجل دخولك اليوم بعد" : "You haven't checked in today yet"}
+                {t("You haven't checked in today yet", "لم تسجل دخولك اليوم بعد")}
               </p>
             </div>
           </Card>
@@ -229,7 +293,7 @@ const loadData = async () => {
             <Card className="p-6 text-center cursor-pointer hover:shadow-lg transition-all" style={{ backgroundColor: "var(--surface)" }}>
               <Activity className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--primary)" }} />
               <h4 className="font-semibold" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "التمارين" : "Exercises"}
+                {t("Exercises", "التمارين")}
               </h4>
             </Card>
           </Link>
@@ -238,7 +302,7 @@ const loadData = async () => {
             <Card className="p-6 text-center cursor-pointer hover:shadow-lg transition-all" style={{ backgroundColor: "var(--surface)" }}>
               <AlertCircle className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--error)" }} />
               <h4 className="font-semibold" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "طوارئ" : "Emergency"}
+                {t("Emergency", "طوارئ")}
               </h4>
             </Card>
           </Link>
@@ -246,33 +310,33 @@ const loadData = async () => {
 
         {/* Health Status Cards */}
        <h2 className="text-lg font-semibold text-[var(--strong-text)] mb-2">
-          {isRTL ? "حالة اليوم" : "Your Health Today"}
+          {t("Your Health Today", "حالة اليوم")}
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
           <HealthCard 
-            title={isRTL ? "معدل القلب": "Heart Rate"}
+            title={t("Heart Rate", "معدل القلب")}
             value="96"
-            subtitle="BPM"
+            subtitle={t("BPM", "نبضة في الدقيقة")}
             icon={Heart}
             color="heartRate"
           />
           <HealthCard 
-            title={isRTL ? "الخطوات" : "Steps"}
+            title={t("Steps", "الخطوات")}
             value="2,300"
-            subtitle="steps"
+            subtitle={t("step", "خطوة")}
             icon={Activity}
             color="steps"
           />
           <HealthCard 
-            title={isRTL ? "النوم" : "Sleep"}
+            title={t("Sleep", "النوم")}
             value="5.5"
-            subtitle="hours"
+            subtitle={t("hours", "ساعات")}
             icon={Moon}
             color="sleep"
           />
           <HealthCard 
-            title={isRTL ? "المزاج" : "Mood"}
+            title={t("Mood", "المزاج")}
             value={todayCheckIn ? "😊" : "😐"}
             icon={TrendingUp}
             color={todayCheckIn ? "mood" : "noMood"}
@@ -293,7 +357,7 @@ const loadData = async () => {
       <div className="text-4xl">  <ThermometerSun size={36} color="#D35400" /></div>
       <div>
         <h4 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
-          {isRTL ? "درجة حرارة الجسم" : "Body Temperature"}
+          {t("Body Temperature", "درجة حرارة الجسم")}
         </h4>
         <p className="text-3xl font-bold" style={{ color: "#D35400" }}>
           36.8°C
@@ -350,19 +414,19 @@ const loadData = async () => {
          {/* My Medications */}
       <section className="space-y-4">
         <h2 className={`text-lg font-semibold `}>
-          Medications </h2>
+          {t("My Medications", "أدويتي")} </h2>
 
         <MedicationCard
           name="Tecfidera"
           dosage="240mg"
-          frequency="Twice Daily"
+          frequency=  {t("Twice daily", "مرتان يوميا")} 
           color="info"
           time = {["9:00 AM", "9:00 PM"]}
         />
          <MedicationCard
           name="Vitamin D"
           dosage="5000 IU"
-          frequency="One Daily"
+          frequency= {t("Once daily", "مرة يوميا")} 
           color="info"
            time = {["9:00 AM"]}
         />
@@ -385,9 +449,17 @@ const loadData = async () => {
             </Button>
           </Link>
         </div>
-        
+        {/* Appointment Sample Card */}
+        <AppointmentCard
+          doctor="Dr. Aisha Al Mansoori"
+          specialty="Neurology"
+          date="2025-10-12"
+          time="10:30 AM"
+          location="Dubai Hospital"
+          type="Consultation"
+        />
         {upcomingAppointments.length === 0 ? (
-            <Card className="p-6 text-center">
+            <Card className=" p-6 text-center">
               <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className={`text-gray-500 `}>
                     {isRTL ? "لا يوجد موعد" : "No Appointments"}
@@ -396,28 +468,25 @@ const loadData = async () => {
         ) : (
           <div className="space-y-3">
             {upcomingAppointments.map((appointment) => {
-              // Render HealthCard for specific types like 'mri_scan', 'blood_test'
-              if (['mri_scan', 'blood_test'].includes(appointment.type)) {
                 return (
                   <HealthCard 
                     key={appointment.id} 
-                    title={getText('imaging')} // Or a more specific title based on appointment.type
+                    title={getText("imaging")} // Or a more specific title based on appointment.type
                     value={new Date(appointment.appointment_date).toLocaleDateString()} 
                     subtitle={appointment.location} 
                     icon={Beaker} 
                     color="info" 
                   />
                 );
-              } 
               return (
                 <AppointmentCard
-                  doctor="Dr. Aisha Al Mansoori"
-                  specialty="Neurology"
-                  date="2025-10-12"
-                  time="10:30 AM"
-                  location="Dubai Hospital"
-                  type="Consultation"
-                  // onReschedule={handleRescheduleAppointment}
+                  key={appointment.id}
+                  doctor={appointment.doctor_name}
+                  specialty={appointment.specialty}
+                  date={appointment.appointment_date}
+                  time={appointment.appointment_time}
+                  location={appointment.location}
+                  type={appointment.type}
                 />
               );
             })}
@@ -430,12 +499,13 @@ const loadData = async () => {
         {/* Tip of the Day */}
         <Card className="p-6" style={{ backgroundColor: "var(--primary-100)" }}>
           <h4 className="font-semibold mb-2" style={{ color: "var(--primary)" }}>
-            {isRTL ? "نصيحة اليوم" : "Tip of the Day"}
+            {t("Tip of the Day", "نصيحة اليوم")}
           </h4>
           <p style={{ color: "var(--strong-text)" }}>
-            {isRTL 
-              ? "حافظ على رطوبة جسمك! شرب الماء بانتظام يساعد في إدارة الأعراض وتحسين مستويات الطاقة."
-              : "Stay hydrated! Drinking water regularly helps manage symptoms and improves energy levels."}
+            {t(
+              "Stay hydrated! Drinking water regularly helps manage symptoms and improves energy levels.",
+              "حافظ على رطوبة جسمك! شرب الماء بانتظام يساعد في إدارة الأعراض وتحسين مستويات الطاقة."
+            )}
           </p>
         </Card>
       </div>

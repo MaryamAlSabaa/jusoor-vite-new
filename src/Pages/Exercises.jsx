@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { Exercise } from "../Entities/Exercise";
 import ExerciseChatbot from "../components/ExerciseChatbot";
 import { checkIn } from "../Entities/CheckIn";
@@ -11,7 +12,6 @@ import { ChatBaseAI } from "../integrations/ChatBaseAI";
 
 export default function Exercises() {
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [userFatigue, setUserFatigue] = useState(5);
@@ -19,6 +19,7 @@ export default function Exercises() {
   const [loading, setLoading] = useState(true);
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const navigate = useNavigate();
+  const { language, isRTL } = useAccessibility();
 
 useEffect(() => {
   const handleFocus = () => loadData(); // reload whenever user comes back to this page

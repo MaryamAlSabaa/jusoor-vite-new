@@ -1,32 +1,33 @@
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { Journal } from "../Entities/Journal";
 import { Button, Card } from "../components";
 import { Mic, BookOpen, Calendar } from "lucide-react";
 import { format } from "date-fns";
-import { User } from "../Entities/User";
+
 import SpeechToText from "../components/SpeechToText.jsx";
+
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 export default function JournalPage() {
   const [user, setUser] = useState(null);
-  const [isRTL, setIsRTL] = useState(false);
   const [entries, setEntries] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [newEntry, setNewEntry] = useState("");
   const { transcript, resetTranscript } = useSpeechRecognition();
+  const { language, isRTL } = useAccessibility();
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [language]);
 
   const loadData = async () => {
     try {
       const userData = await User.me();
       setUser(userData);
-      setIsRTL(userData.language_preference === "ar");
-
-      // const journalEntries = await Journal.list("-entry_date", 20);
-      // setEntries(journalEntries);
+      // load journal entries for the user
+      const journalEntries = await Journal.list();
+      setEntries(journalEntries || []);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -41,19 +42,40 @@ export default function JournalPage() {
   const handleStopRecording = () => {
     setIsRecording(false);
     SpeechRecognition.stopListening();
-    setNewEntry(transcript); // Save the transcript only when stopped
+    setNewEntry(transcript); // save the transcript only when stopped
   };
 
   const handleSaveEntry = async () => {
     try {
-      await Journal.create({
+      // word analysis for emotion tagging, later on it would be replaced with AI
+      const text = newEntry.toLowerCase();
+      let emotion_tag = "neutral";
+      if (isRTL) {
+        if (text.includes("سعيد") || text.includes("تحسن") || text.includes("شكر")) emotion_tag = "hopeful";
+        else if (text.includes("قلق") || text.includes("توتر")) emotion_tag = "anxious";
+        else if (text.includes("حزين") || text.includes("اكتئاب")) emotion_tag = "sad";
+        else if (text.includes("هدوء") || text.includes("مرتاح")) emotion_tag = "calm";
+        else if (text.includes("امتنان")) emotion_tag = "grateful";
+        else if (text.includes("ضغط") || text.includes("إجهاد")) emotion_tag = "stressed";
+      } else {
+        if (text.includes("happy") || text.includes("better") || text.includes("thank")) emotion_tag = "hopeful";
+        else if (text.includes("anxiety") || text.includes("anxious") || text.includes("worry")) emotion_tag = "anxious";
+        else if (text.includes("sad") || text.includes("depressed")) emotion_tag = "sad";
+        else if (text.includes("calm") || text.includes("relaxed")) emotion_tag = "calm";
+        else if (text.includes("grateful") || text.includes("gratitude")) emotion_tag = "grateful";
+        else if (text.includes("stressed") || text.includes("stress")) emotion_tag = "stressed";
+        else if (text.includes("tired") || text.includes("fatigue")) emotion_tag = "tired";
+      }
+      const created = await Journal.create({
         transcript: newEntry,
         entry_date: format(new Date(), "yyyy-MM-dd"),
         language: isRTL ? "ar" : "en",
-        emotion_tag: "hopeful"
+        emotion_tag
       });
       setNewEntry("");
-      loadData();
+      setEntries((prev) => [created, ...prev]);
+      resetTranscript(); // clearing transcript after saving and going back to initial state
+      setIsRecording(false); // ensuring that recording state is reset
     } catch (error) {
       console.error("Error saving entry:", error);
     }
@@ -76,6 +98,7 @@ export default function JournalPage() {
   const emotionEmojis = {
     calm: "😌",
     stressed: "😰",
+    tired: "😟",
     sad: "😢",
     hopeful: "🌟",
     anxious: "😟",
@@ -83,16 +106,15 @@ export default function JournalPage() {
     neutral: "😐"
   };
 
+  // Translation dictionary for all UI strings
+  const t = (en, ar) => (isRTL ? ar : en);
+
   return (
     <div className="min-h-screen p-6" dir={isRTL ? "rtl" : "ltr"}>
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>
-            {isRTL ? "يومياتي" : "My Journal"}
-          </h1>
-          <p style={{ color: "var(--muted-text)" }}>
-            {isRTL ? "سجل أفكارك ومشاعرك" : "Record your thoughts and feelings"}
-          </p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--strong-text)" }}>{t("My Journal", "يومياتي")}</h1>
+          <p style={{ color: "var(--muted-text)" }}>{t("Record your thoughts and feelings", "سجل أفكارك ومشاعرك")}</p>
         </div>
 
         {/* New Entry */}
@@ -101,15 +123,10 @@ export default function JournalPage() {
             <button
               onClick={handleStartRecording}
               className="w-full p-8 rounded-xl flex flex-col items-center justify-center transition-all"
-              style={{
-                backgroundColor: "var(--primary-100)",
-                border: `2px dashed var(--primary)`,
-              }}
+              style={{ backgroundColor: "var(--primary-100)", border: `2px dashed var(--primary)` }}
             >
               <Mic className="w-12 h-12 mb-3" style={{ color: "var(--primary)" }} />
-              <p className="font-medium" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "اضغط للتسجيل" : "Tap to Record"}
-              </p>
+              <p className="font-medium" style={{ color: "var(--strong-text)" }}>{t("Tap to Record", "اضغط للتسجيل")}</p>
             </button>
           )}
 
@@ -117,32 +134,18 @@ export default function JournalPage() {
             <button
               onClick={handleStopRecording}
               className="w-full p-8 rounded-xl flex flex-col items-center justify-center transition-all"
-              style={{
-                backgroundColor: "var(--error)",
-                border: `2px dashed var(--error)`,
-              }}
+              style={{ backgroundColor: "var(--error)", border: `2px dashed var(--error)` }}
             >
               <Mic className="w-12 h-12 mb-3" style={{ color: "var(--errorMic)" }} />
-              <p className="font-medium" style={{ color: "var(--strong-text)" }}>
-                {isRTL ? "جاري التسجيل... اضغط للإيقاف" : "Listening ... Tap to Stop"}
-              </p>
+              <p className="font-medium" style={{ color: "var(--strong-text)" }}>{t("Listening ... Tap to Stop", "جاري التسجيل... اضغط للإيقاف")}</p>
             </button>
           )}
 
-          {/* <div className="mt-2"> */}
-            {/* <strong>{isRTL ? "معاينة التسجيل:" : "Entry Preview:"}</strong> */}
-            {/* <div className="bg-gray-100 rounded p-2 mt-1 min-h-[40px]">{isRecording ? transcript : newEntry}</div> */}
-          {/* </div> */}
-
           {newEntry && (
             <div className="space-y-4 mt-4">
-                <h3 className="font-semibold mb-3" style={{ color: "var(--primary)" }}>
-              {isRTL ? "ما قلته:" : "What you said:"}
-            </h3>
+              <h3 className="font-semibold mb-3" style={{ color: "var(--primary)" }}>{t("What you said:", "ما قلته:")}</h3>
               <div className="p-4 rounded-xl" style={{ backgroundColor: "var(--primary-100)" }}>
-                <p style={{ color: "var(--strong-text)" }}>
-                  {newEntry}
-                </p>
+                <p style={{ color: "var(--strong-text)" }}>{newEntry}</p>
               </div>
               <div className="flex gap-3">
                 <Button
@@ -150,7 +153,7 @@ export default function JournalPage() {
                   className="flex-1 h-12 rounded-xl font-semibold"
                   style={{ backgroundColor: "var(--success)", color: "white" }}
                 >
-                  {isRTL ? "حفظ" : "Save Entry"}
+                  {t("Save Entry", "حفظ")}
                 </Button>
                 <Button
                   onClick={() => setNewEntry("")}
@@ -158,24 +161,35 @@ export default function JournalPage() {
                   className="flex-1 h-12 rounded-xl font-semibold"
                   style={{ borderColor: "var(--primary-200)", color: "var(--primary)" }}
                 >
-                  {isRTL ? "إلغاء" : "Cancel"}
+                  {t("Cancel", "إلغاء")}
                 </Button>
               </div>
             </div>
           )}
           <div className="mb-6">
             <SpeechToText onTranscript={handleSpeechTranscript} />
-           
           </div>
         </Card>
 
-        {/* Past Entries */}
         <div>
-          <h3 className="font-semibold mb-4" style={{ color: "var(--strong-text)" }}>
-            {isRTL ? "التسجيلات السابقة" : "Past Entries"}
-          </h3>
+          <h3 className="font-semibold mb-4" style={{ color: "var(--strong-text)" }}>{t("Past Entries", "التسجيلات السابقة")}</h3>
           <div className="space-y-4">
-            {entries.map((entry) => (
+            {(entries.length > 0 ? entries : [
+              {
+                id: "sample1",
+                transcript: t("I felt much better today after doing my exercises.", "شعرت اليوم بتحسن كبير بعد ممارسة التمارين الرياضية."),
+                entry_date: "2025-10-09",
+                emotion_tag: "hopeful",
+                title: t("Positive Experience", "تجربة إيجابية")
+              },
+              {
+                id: "sample2",
+                transcript: t("I had some anxiety about my upcoming doctor appointment.", "كان لدي بعض القلق بشأن موعد الطبيب القادم."),
+                entry_date: "2025-10-08",
+                emotion_tag: "anxious",
+                title: t("Health Anxiety", "قلق صحي")
+              }
+            ]).map((entry) => (
               <Card
                 key={entry.id}
                 className="p-6"
@@ -185,30 +199,17 @@ export default function JournalPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{emotionEmojis[entry.emotion_tag]}</span>
                     <span className="text-sm" style={{ color: "var(--muted-text)" }}>
-                      {format(new Date(entry.entry_date), "MMM d, yyyy")}
+                      {format(new Date(entry.entry_date), t("MMM d, yyyy", "d MM yyyy"))}
                     </span>
                   </div>
                 </div>
                 {entry.title && (
-                  <h4 className="font-semibold mb-2" style={{ color: "var(--strong-text)" }}>
-                    {entry.title}
-                  </h4>
+                  <h4 className="font-semibold mb-2" style={{ color: "var(--strong-text)" }}>{entry.title}</h4>
                 )}
-                <p style={{ color: "var(--strong-text)" }}>
-                  {entry.transcript}
-                </p>
+                <p style={{ color: "var(--strong-text)" }}>{entry.transcript}</p>
               </Card>
             ))}
           </div>
-
-          {entries.length === 0 && (
-            <Card className="p-12 text-center" style={{ backgroundColor: "var(--surface)" }}>
-              <BookOpen className="w-16 h-16 mx-auto mb-4" style={{ color: "var(--muted-text)" }} />
-              <p style={{ color: "var(--muted-text)" }}>
-                {isRTL ? "لا توجد تسجيلات بعد" : "No entries yet"}
-              </p>
-            </Card>
-          )}
         </div>
       </div>
     </div>

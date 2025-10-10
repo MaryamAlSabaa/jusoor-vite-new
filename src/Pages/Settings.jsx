@@ -1,23 +1,21 @@
 
 import React, { useState, useEffect } from "react";
+import { useAccessibility } from "../Entities/AccessibilityContext";
 import { useNavigate } from "react-router-dom";
 import { Globe, Type, Zap, MapPin, LogOut, User as UserIcon } from "lucide-react";
 import { User } from "../Entities/User";
 import { Switch, Button } from "../components";
-import { useAccessibility } from "../Entities/AccessibilityContext"; 
-
-export default function AccessibilitySettings() {
-  const { fontSize, setFontSize, lineHeight, setLineHeight, letterSpacing, setLetterSpacing, bold, setBold } = useAccessibility();
+export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState({
-    language_preference: "en",
     accessibility_preset: "standard",
     health_sync_enabled: false,
     emergency_location_enabled: false,
   });
+  const { language, setLanguage, isRTL } = useAccessibility();
+  const t = (en, ar) => (isRTL ? ar : en);
 
-  
   useEffect(() => {
     loadUser();
   }, []);
@@ -27,7 +25,6 @@ export default function AccessibilitySettings() {
       const userData = await User.me();
       setUser(userData);
       setSettings({
-        language_preference: userData.language_preference || "en",
         accessibility_preset: userData.accessibility_preset || "standard",
         health_sync_enabled: userData.health_sync_enabled || false,
         emergency_location_enabled: userData.emergency_location_enabled || false,
@@ -37,12 +34,11 @@ export default function AccessibilitySettings() {
     }
   };
 
-  
   const handleSave = async () => {
     try {
-      await User.update(user.id, settings);
-      alert(settings.language_preference === "ar" ? "تم الحفظ" : "Settings saved");
-      window.location.reload();
+      await User.update(user.id, { ...settings, language_preference: language });
+      alert(language === "ar" ? "تم الحفظ" : "Settings saved");
+      // No reload needed, context updates app
     } catch (error) {
       console.error("Error saving settings:", error);
     }
@@ -57,7 +53,7 @@ export default function AccessibilitySettings() {
     }
   };
 
-  const isRTL = settings.language_preference === "ar";
+  // isRTL now comes from context
 
   return (
     <div className="min-h-screen p-6" dir={isRTL ? "rtl" : "ltr"}>
@@ -103,27 +99,27 @@ export default function AccessibilitySettings() {
           <div className="flex items-center gap-3 mb-4">
             <Globe className="w-5 h-5" style={{ color: "var(--primary)" }} />
             <h3 className="font-semibold" style={{ color: "var(--strong-text)" }}>
-              {isRTL ? "اللغة" : "Language"}
+              {t("Language", "اللغة")}
             </h3>
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => setSettings({ ...settings, language_preference: "en" })}
+              onClick={() => setLanguage("en")}
               className="flex-1 p-4 rounded-xl font-medium transition-all"
               style={{
-                backgroundColor: settings.language_preference === "en" ? "var(--primary-100)" : "white",
-                border: settings.language_preference === "en" ? "2px solid var(--primary)" : "2px solid var(--primary-200)",
+                backgroundColor: language === "en" ? "var(--primary-100)" : "white",
+                border: language === "en" ? "2px solid var(--primary)" : "2px solid var(--primary-200)",
                 color: "var(--strong-text)",
               }}
             >
               English
             </button>
             <button
-              onClick={() => setSettings({ ...settings, language_preference: "ar" })}
+              onClick={() => setLanguage("ar")}
               className="flex-1 p-4 rounded-xl font-medium transition-all"
               style={{
-                backgroundColor: settings.language_preference === "ar" ? "var(--primary-100)" : "white",
-                border: settings.language_preference === "ar" ? "2px solid var(--primary)" : "2px solid var(--primary-200)",
+                backgroundColor: language === "ar" ? "var(--primary-100)" : "white",
+                border: language === "ar" ? "2px solid var(--primary)" : "2px solid var(--primary-200)",
                 color: "var(--strong-text)",
               }}
             >
@@ -133,91 +129,35 @@ export default function AccessibilitySettings() {
         </div>
 
         {/* Accessibility */}
-     
         <div
           className="p-6 rounded-2xl"
           style={{ backgroundColor: "var(--surface)" }}
         >
-          
           <div className="flex items-center gap-3 mb-4">
             <Type className="w-5 h-5" style={{ color: "var(--primary)" }} />
             <h3 className="font-semibold" style={{ color: "var(--strong-text)" }}>
-              {isRTL ? "إمكانية الوصول" : "Accessibility"}
+              {t("Accessibility", "إمكانية الوصول")}
             </h3>
           </div>
-           {/* Custom Accessibility Buttons */}
-<div className="space-y-2">
-  <button
-    onClick={() => setFontSize(prev => prev + 2)}
-    className="w-full p-4 rounded-xl text-left transition-all"
-    style={{
-      backgroundColor: "white",
-      border: "2px solid var(--primary-200)",
-    }}
-  >
-    <span style={{ color: "var(--strong-text)" }}>
-      {isRTL ? "تكبير حجم الخط" : "Increase Font Size"} ({fontSize}px)
-    </span>
-  </button>
-
-  <button
-    onClick={() => setFontSize(prev => Math.max(prev - 2, 12))}
-    className="w-full p-4 rounded-xl text-left transition-all"
-    style={{
-      backgroundColor: "white",
-      border: "2px solid var(--primary-200)",
-    }}
-  >
-    <span style={{ color: "var(--strong-text)" }}>
-      {isRTL ? "تصغير حجم الخط" : "Decrease Font Size"} ({fontSize}px)
-    </span>
-  </button>
-
-  <button
-    onClick={() => setLineHeight(prev => prev + 0.2)}
-    className="w-full p-4 rounded-xl text-left transition-all"
-    style={{
-      backgroundColor: "white",
-      border: "2px solid var(--primary-200)",
-    }}
-  >
-    <span style={{ color: "var(--strong-text)" }}>
-      {isRTL ? "زيادة ارتفاع السطر" : "Increase Line Height"} ({lineHeight.toFixed(1)})
-    </span>
-  </button>
-
-  <button
-    onClick={() => setLetterSpacing(prev => prev + 0.5)}
-    className="w-full p-4 rounded-xl text-left transition-all"
-    style={{
-      backgroundColor: "white",
-      border: "2px solid var(--primary-200)",
-    }}
-  >
-    <span style={{ color: "var(--strong-text)" }}>
-      {isRTL ? "زيادة تباعد الحروف" : "Increase Letter Spacing"} ({letterSpacing}px)
-    </span>
-  </button>
-
-  <button
-    onClick={() => setBold(prev => !prev)}
-    className="w-full p-4 rounded-xl text-left transition-all"
-    style={{
-      backgroundColor: "white",
-      border: "2px solid var(--primary-200)",
-    }}
-  >
-    <span style={{ color: "var(--strong-text)" }}>
-      {bold
-        ? isRTL
-          ? "نص عادي"
-          : "Normal Text"
-        : isRTL
-        ? "نص غامق"
-        : "Bold Text"}
-    </span>
-  </button>
-</div>
+          <div className="space-y-2">
+            {["standard", "large_text", "low_effort"].map((preset) => (
+              <button
+                key={preset}
+                onClick={() => setSettings({ ...settings, accessibility_preset: preset })}
+                className="w-full p-4 rounded-xl text-left transition-all"
+                style={{
+                  backgroundColor: settings.accessibility_preset === preset ? "var(--primary-100)" : "white",
+                  border: settings.accessibility_preset === preset ? "2px solid var(--primary)" : "2px solid var(--primary-200)",
+                }}
+              >
+                <span style={{ color: "var(--strong-text)" }}>
+                  {preset === "standard" && (isRTL ? "قياسي" : "Standard")}
+                  {preset === "large_text" && (isRTL ? "نص كبير" : "Large Text")}
+                  {preset === "low_effort" && (isRTL ? "جهد منخفض" : "Low Effort")}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Toggles */}
