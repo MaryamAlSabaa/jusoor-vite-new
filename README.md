@@ -7,12 +7,12 @@ Jusoor is a modern web application designed to support MS patients in managing t
 - **Home Dashboard**: View daily check-in, health stats, medications, upcoming appointments, and tips.
 - **Voice Check-In**: Record your daily status using speech recognition.
 - **Journal**: Log your thoughts and feelings with speech-to-text support.
-- **Health History**: Review your health data and trends.
 - **Medications**: Track and mark medication intake.
+- **Health Tracker**: Track mood, heart rate, steps, and sleep hours.
+- **Overheating Tracker System**: Track body temprature and prevent overheating flars-up.
 - **Appointments**: Book, view, and manage upcoming appointments.
-- **Reports**: Generate and share patient reports.
+- **Reports**: Share patient's medical reports.
 - **Emergency**: Quick access to emergency contacts and location sharing.
-- **Settings**: Manage language, accessibility, health sync, and emergency location options.
 - **Accessibility**: Adjustable font size, line height, letter spacing, and bold text via context.
 - **RTL Support**: Full support for Arabic and English languages.
 
