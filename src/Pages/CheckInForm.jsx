@@ -5,6 +5,7 @@ import { createPageUrl } from "../utils";
 import { User } from "../Entities/User";
 import { checkIn } from "../Entities/CheckIn";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 export default function CheckInForm() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);

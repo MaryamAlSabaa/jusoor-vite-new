@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import SpeechRecognitionPopup from "./components/SpeechRecognitionPopup";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
@@ -9,24 +9,23 @@ import { useAccessibility } from "./Entities/AccessibilityContext";
 export default function Layout() {
   const [showSpeechPopup, setShowSpeechPopup] = useState(false);
   const [user, setUser] = useState(null);
-  // const [isRTL, setIsRTL] = useState(false);
   const location = useLocation();
   const { language, isRTL2 } = useAccessibility();
   const t = (en, ar) => (isRTL2 ? ar : en);
 
   useEffect(() => {
-    loadData();
-  }, [language]);
-
-   const loadData = async () => {
+    const loadData = async () => {
       try {
         const userData = await User.me();
         setUser(userData);
-  
       } catch (error) {
         console.error("Error loading data:", error);
       }
     };
+    loadData();
+  }, []);
+
+  
   const getCurrentPageFromPath = () => {
     const path = location.pathname;
     if (path === '/') return 'Home';
@@ -43,16 +42,20 @@ export default function Layout() {
     return 'Home';
   };
 
-  const currentPage = getCurrentPageFromPath();
+  // const currentPage = getCurrentPageFromPath();
+  const currentPage = useMemo(() => getCurrentPageFromPath(), [location]);
 
 
-  const navItems = [
-    { name: t("Home", "الرئيسية"), icon: Home, page: "Home" },
-    { name: t("Exercises", "التمارين"), icon: Activity, page: "Exercises" },
-    { name: t("Voice", "الصوت"), icon: Mic, page: "SpeechRecognition", isCenter: true },
-    { name: t("Journal", "اليوميات"), icon: BookOpen, page: "Journal" },
-    { name: t("Settings", "الإعدادات"), icon: Settings, page: "Settings" },
-  ];
+   const navItems = useMemo(
+    () => [
+      { name: t("Home", "الرئيسية"), icon: Home, page: "Home" },
+      { name: t("Exercises", "التمارين"), icon: Activity, page: "Exercises" },
+      { name: t("Voice", "الصوت"), icon: Mic, page: "SpeechRecognition", isCenter: true },
+      { name: t("Journal", "اليوميات"), icon: BookOpen, page: "Journal" },
+      { name: t("Settings", "الإعدادات"), icon: Settings, page: "Settings" },
+    ],
+    [isRTL2]
+  );
 
   return (
     <div dir={isRTL2 ? "rtl" : "ltr"}>
