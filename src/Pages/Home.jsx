@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useAccessibility } from "../Entities/AccessibilityContext";
-import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { checkIn } from "../Entities/CheckIn";
 import { HealthData } from "../Entities/HealthData";
 import { Button, Card, HealthCard, MedicationCard, AppointmentCard } from "../components/index";
 import logo from '../assets/logo.png';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useLocation, Link } from "react-router-dom";
 
 import { Mic, Activity, TrendingUp,ThermometerSun , AlertCircle, Heart, 
   Moon,
@@ -29,6 +29,8 @@ function VoiceAssistantCheckIn({ questions, onComplete }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState([]);
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
+ 
+
 
   React.useEffect(() => {
     if (!listening && transcript) {
@@ -84,15 +86,33 @@ function VoiceAssistantCheckIn({ questions, onComplete }) {
 }
 
 export default function Home() {
-  // ...existing code...
+
 
   const [user, setUser] = useState(null);
   const [todayCheckIn, setTodayCheckIn] = useState(null);
   const [recentHealth, setRecentHealth] = useState(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const location = useLocation();
   const [showTrend, setShowTrend] = useState(false);
   const { isRTL, language } = useAccessibility();
   const t = (en, ar) => (isRTL ? ar : en);
+
+  // loads all existing appointments
+   useEffect(() => {
+    const loadAppointments = async () => {
+      const allAppointments = await Appointment.getAll();
+      setUpcomingAppointments(allAppointments);
+    };
+    loadAppointments();
+  }, []);
+
+  // listens for a newAppointment passed via location.state and appends it to the upcomingAppointments list
+  useEffect(() => {
+  if (location.state?.newAppointment) {
+    setUpcomingAppointments(prev => [...prev, location.state.newAppointment]);
+    
+  }
+}, [location.state]);
 
   const tempHistory = [
     { time: t("8 AM", "٨ صباحًا"), temp: 36.5 },
@@ -125,7 +145,6 @@ const loadData = async () => {
       if (healthData && healthData.length > 0) {
         setRecentHealth(healthData[0]);
       } else {
-        // Set default values if no health data exists
         setRecentHealth({
           steps: 5230,
           sleep_hours: 7.5,
@@ -146,30 +165,6 @@ const loadData = async () => {
   }
 };
 
-  /*const loadData = async () => {
-  try {
-    // Fake user
-    const userData = { full_name: "Test User", email: "test@example.com", language_preference: "en" };
-    setUser(userData);
-    setIsRTL(userData.language_preference === "ar");
-
-    // Fake today's check-in
-    setTodayCheckIn({
-      fatigue_level: 4,
-      mood: "happy",
-      pain_level: 2,
-    });
-
-    // Fake health data
-    setRecentHealth({
-      steps: 5230,
-      sleep_hours: 7,
-    });
-  } catch (error) {
-    console.error("Error loading data:", error);
-  }
-};*/
-
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return t("Good Morning", "صباح الخير");
@@ -180,7 +175,6 @@ const loadData = async () => {
   return (
   <div className="min-h-screen p-6 pb-24" dir={isRTL ? "rtl" : "ltr"}>
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: "var(--strong-text)" }}>
@@ -197,7 +191,6 @@ const loadData = async () => {
           />
         </div>
 
-        {/* Voice Check-In CTA */}
         <Link to={createPageUrl("VoiceCheckIn")}>
           <Card
             className="p-8 text-center cursor-pointer hover:shadow-lg transition-all"
@@ -236,7 +229,6 @@ const loadData = async () => {
 
           </button>
         </a>
-        {/* Today's Status */}
         {todayCheckIn ? (
           <Card className="p-6" style={{ backgroundColor: "var(--surface)" }}>
             <div className="flex items-center gap-3 mb-4">
@@ -344,55 +336,55 @@ const loadData = async () => {
         </div>
         {/* Body Temperature Card */}
         
-  <Card
-  className="p-6 mt-4 w-full rounded-2xl shadow-md"
-  style={{
-    background: "linear-gradient(135deg, #FFF9E6 0%, #FFEFD5 100%)",
-    border: "1px solid #FFE0B2",
-  }}
->
-  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-    {/* Left side: Temperature value */}
-    <div className="flex items-center gap-3">
-      <div className="text-4xl">  <ThermometerSun size={36} color="#D35400" /></div>
-      <div>
-        <h4 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
-          {t("Body Temperature", "درجة حرارة الجسم")}
-        </h4>
-        <p className="text-3xl font-bold" style={{ color: "#D35400" }}>
-          36.8°C
-        </p>
-      </div>
-    </div>
-
-    {/* Right side: Status + Analysis */}
-    <div className="flex flex-col text-sm md:text-base w-full md:w-auto">
-      {/* Row for status badge + chart icon */}
-      <div className="flex items-center justify-between">
-        <span
-          className="px-3 py-1 rounded-full font-medium text-white"
-          style={{ backgroundColor: "#2ECC71" }}
+        <Card
+        className="p-6 mt-4 w-full rounded-2xl shadow-md"
+        style={{
+          background: "linear-gradient(135deg, #FFF9E6 0%, #FFEFD5 100%)",
+          border: "1px solid #FFE0B2",
+        }}
         >
-          {isRTL ? "طبيعي" : "Normal"}
-        </span>
-        <button onClick={() => setShowTrend(!showTrend)}>
-          <BarChart2 size={28} color="#000000" />
-        </button>
-      </div>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        {/* Left side: Temperature value */}
+        <div className="flex items-center gap-3">
+          <div className="text-4xl">  <ThermometerSun size={36} color="#D35400" /></div>
+          <div>
+            <h4 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
+              {t("Body Temperature", "درجة حرارة الجسم")}
+            </h4>
+            <p className="text-3xl font-bold" style={{ color: "#D35400" }}>
+              36.8°C
+            </p>
+          </div>
+        </div>
 
-      {/* Analysis text */}
-      <div className="mt-2 text-left">
-        <h5 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
-          {isRTL ? "تحليل" : "Analysis"}
-        </h5>
-        <p style={{ color: "var(--strong-text)" }}>
-          {isRTL
-            ? "درجة الحرارة ضمن النطاق الطبيعي. لا توجد علامات على الحمى."
-            : "Temperature is within the normal range. No signs of fever."}
-        </p>
+        {/* Right side: Status + Analysis */}
+        <div className="flex flex-col text-sm md:text-base w-full md:w-auto">
+          {/* Row for status badge + chart icon */}
+          <div className="flex items-center justify-between">
+            <span
+              className="px-3 py-1 rounded-full font-medium text-white"
+              style={{ backgroundColor: "#2ECC71" }}
+            >
+              {isRTL ? "طبيعي" : "Normal"}
+            </span>
+            <button onClick={() => setShowTrend(!showTrend)}>
+              <BarChart2 size={28} color="#000000" />
+            </button>
+          </div>
+
+          {/* Analysis text */}
+          <div className="mt-2 text-left">
+            <h5 className="font-semibold mb-1" style={{ color: "#E67E22" }}>
+              {isRTL ? "تحليل" : "Analysis"}
+            </h5>
+            <p style={{ color: "var(--strong-text)" }}>
+              {isRTL
+                ? "درجة الحرارة ضمن النطاق الطبيعي. لا توجد علامات على الحمى."
+                : "Temperature is within the normal range. No signs of fever."}
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
     {/* Trend Chart Section */}
       {showTrend && (
@@ -449,15 +441,7 @@ const loadData = async () => {
             </Button>
           </Link>
         </div>
-        {/* Appointment Sample Card */}
-        <AppointmentCard
-          doctor="Dr. Aisha Al Mansoori"
-          specialty="Neurology"
-          date="2025-10-12"
-          time="10:30 AM"
-          location="Dubai Hospital"
-          type="Consultation"
-        />
+       
         {upcomingAppointments.length === 0 ? (
             <Card className=" p-6 text-center">
               <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-3" />
@@ -467,20 +451,10 @@ const loadData = async () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {upcomingAppointments.map((appointment) => {
-                return (
-                  <HealthCard 
-                    key={appointment.id} 
-                    title={getText("imaging")} // Or a more specific title based on appointment.type
-                    value={new Date(appointment.appointment_date).toLocaleDateString()} 
-                    subtitle={appointment.location} 
-                    icon={Beaker} 
-                    color="info" 
-                  />
-                );
-              return (
+            {upcomingAppointments.map((appointment) => (
+                
                 <AppointmentCard
-                  key={appointment.id}
+                 key={appointment.id}
                   doctor={appointment.doctor_name}
                   specialty={appointment.specialty}
                   date={appointment.appointment_date}
@@ -488,8 +462,8 @@ const loadData = async () => {
                   location={appointment.location}
                   type={appointment.type}
                 />
-              );
-            })}
+            
+            ))}        
           </div>
         )}
       </section>
