@@ -1,141 +1,192 @@
-// // ChatBaseAI.js
-// export class ChatBaseAI {
-//   static async getExerciseRecommendations(userData, checkInData, userResponses) {
-//     try {
-//       // Construct the prompt for ChatBase
-//       const prompt = this.buildPrompt(userData, checkInData, userResponses);
-
-//       // Call backend proxy instead of ChatBase directly
-//       const response = await this.callBackendAPI(prompt);
-
-//       // Parse the response into exercises and safety advice
-//       return this.parseChatBaseResponse(response);
-//     } catch (error) {
-//       console.error('Error getting AI recommendations:', error);
-//       // Return fallback exercises if API fails
-//       return this.getFallbackExercises();
-//     }
-//   }
-
-//   static buildPrompt(userData, checkInData, userResponses) {
-//     const fatigue = userResponses.fatigue_level || checkInData?.fatigue_level || 5;
-//     const mobility = userResponses.mobility_today || 'moderate';
-//     const concerns = userResponses.specific_concerns || [];
-
-//     return `
-// You are Jusoor MS Exercise Assistant. Recommend safe exercises for an MS patient.
-
-// Patient Context:
-// - Fatigue level: ${fatigue}/10
-// - Mobility today: ${mobility}
-// - Specific concerns: ${concerns.join(', ') || 'none'}
-// - Condition: Multiple Sclerosis
-
-// Please provide:
-// 1. 2-3 specific, safe exercise recommendations
-// 2. Safety advice tailored to their current condition
-
-// Format your response as JSON:
-// {
-//   "exercises": [
-//     {
-//       "title": "Exercise name",
-//       "title_ar": "اسم التمرين بالعربية",
-//       "description": "Brief description",
-//       "description_ar": "وصف بالعربية",
-//       "duration_minutes": 5-15,
-//       "category": "relaxation/strength/flexibility/balance"
-//     }
-//   ],
-//   "safety_advice": ["advice 1", "advice 2"]
-// }
-
-// Focus on seated exercises if fatigue >= 7 or mobility is difficult.
-// `;
-//   }
-
-//   static async callBackendAPI(prompt) {
-//     // Call your backend proxy endpoint
-//     const response = await fetch('http://localhost:5000/api/chatbase', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ prompt })
-//     });
-
-//     if (!response.ok) {
-//       const text = await response.text();
-//       throw new Error(`Backend ChatBase API error: ${response.status} - ${text}`);
-//     }
-
-//     return response.json();
-//   }
-
-//   static parseChatBaseResponse(chatbaseResponse) {
-//     try {
-//       const message = chatbaseResponse.message || chatbaseResponse.choices?.[0]?.message?.content;
-
-//       if (!message) {
-//         throw new Error('No message in response');
-//       }
-
-//       // Try to extract JSON
-//       const jsonMatch = message.match(/\{[\s\S]*\}/);
-//       if (jsonMatch) return JSON.parse(jsonMatch[0]);
-
-//       return this.getFallbackExercises();
-//     } catch (error) {
-//       console.error('Error parsing ChatBase response:', error);
-//       return this.getFallbackExercises();
-//     }
-//   }
-
-//   static getFallbackExercises() {
-//     return {
-//       exercises: [
-//         {
-//           id: 1,
-//           title: "Gentle Breathing Exercises",
-//           title_ar: "تمارين التنفس الخفيفة",
-//           description: "Deep breathing to reduce stress and improve oxygen flow",
-//           description_ar: "تمارين التنفس العميق لتقليل التوتر وتحسين تدفق الأكسجين",
-//           duration_minutes: 5,
-//           category: "relaxation"
-//         },
-//         {
-//           id: 2,
-//           title: "Seated Leg Lifts",
-//           title_ar: "رفع الساقين أثناء الجلوس",
-//           description: "Strengthen leg muscles while seated safely",
-//           description_ar: "تقوية عضلات الساقين أثناء الجلوس بأمان",
-//           duration_minutes: 10,
-//           category: "strength"
-//         }
-//       ],
-//       safety_advice: [
-//         "Listen to your body and take breaks as needed",
-//         "Stop immediately if you experience any pain or dizziness"
-//       ]
-//     };
-//   }
-// }
 // src/integrations/ChatBaseAI.js
-
 export class ChatBaseAI {
   static async getExerciseRecommendations(userData, checkInData, userResponses) {
-    try {
-      console.log("🎯 Getting exercise recommendations...");
-      console.log("📊 Check-in data:", checkInData);
-      
-      // For now, use mock data since backend has CORS issues
-      // Remove this once backend is properly configured
-      return await this.getMockRecommendations(checkInData);
-      
-    } catch (error) {
-      console.error('❌ Error getting AI recommendations:', error);
-      return this.getFallbackExercises();
+  try {
+    console.log("🎯 Getting REAL AI exercise recommendations...");
+    console.log("📊 Check-in data:", checkInData);
+    console.log("👤 User data:", userData);
+
+    // Construct the prompt for ChatBase
+    const prompt = this.buildPrompt(userData, checkInData, userResponses);
+
+    // Call backend with ALL data
+    const response = await this.callBackendAPI(prompt, userData, checkInData, userResponses);
+
+    // Parse the response into exercises and safety advice
+    return this.parseChatBaseResponse(response);
+    
+  } catch (error) {
+    console.error('❌ Error getting AI recommendations:', error);
+    console.log('🔄 Falling back to mock data...');
+    return await this.getMockRecommendations(checkInData);
+  }
+}
+  static buildPrompt(userData, checkInData, userResponses) {
+    // Combine all data sources
+    const fatigue = userResponses.fatigue_level || checkInData?.fatigue_level || 5;
+    const mobility = userResponses.mobility_today || checkInData?.mobility_level || 'moderate';
+    const concerns = userResponses.specific_concerns || checkInData?.symptoms || [];
+    const mood = checkInData?.mood || 'neutral';
+    
+    // Get user medical profile
+    const medicalProfile = userData?.medical_profile || {};
+    const age = medicalProfile.age || 'unknown';
+    const msSeverity = medicalProfile.ms_severity || 'moderate';
+    const primarySymptoms = medicalProfile.primary_symptoms || [];
+    const heatSensitivity = medicalProfile.heat_sensitivity || false;
+    const mobilityAid = medicalProfile.mobility_aid || 'none';
+
+    return `
+You are Jusoor MS Exercise Assistant. Recommend safe, personalized exercises for a Multiple Sclerosis patient.
+
+PATIENT PROFILE:
+- Age: ${age}
+- MS Severity: ${msSeverity}
+- Primary Symptoms: ${primarySymptoms.join(', ') || 'none'}
+- Heat Sensitivity: ${heatSensitivity ? 'Yes' : 'No'}
+- Mobility Aid: ${mobilityAid}
+
+TODAY'S CONDITION:
+- Fatigue Level: ${fatigue}/10
+- Mobility: ${mobility}
+- Mood: ${mood}
+- Specific Concerns: ${concerns.join(', ') || 'none'}
+
+REQUIREMENTS:
+1. Recommend 2-3 specific, safe exercises
+2. Provide personalized safety advice
+3. Consider fatigue level and mobility limitations
+4. Focus on seated exercises if fatigue >= 7 or mobility is difficult
+5. Include Arabic translations for Middle Eastern patients
+
+RESPONSE FORMAT (JSON only):
+{
+  "exercises": [
+    {
+      "id": 1,
+      "title": "Exercise name in English",
+      "title_ar": "اسم التمرين بالعربية",
+      "description": "Brief description in English",
+      "description_ar": "وصف مختصر بالعربية", 
+      "duration_minutes": 5-15,
+      "category": "relaxation/strength/flexibility/balance/cardio",
+      "difficulty": "beginner/intermediate",
+      "mobility_requirement": "seated/standing/wheelchair"
     }
+  ],
+  "safety_advice": [
+    "Personalized safety advice 1",
+    "Personalized safety advice 2"
+  ]
+}
+
+IMPORTANT: Return ONLY valid JSON, no other text.
+`;
   }
 
+  static async callBackendAPI(prompt, userData, checkInData, userResponses) {
+  console.log("🚀 Calling backend API with user data...");
+  console.log("👤 User data:", userData);
+  console.log("📊 Check-in data:", checkInData);
+  
+  try {
+    const response = await fetch('/api/chatbase', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        prompt: prompt,
+        userData: userData,        // Add this
+        checkInData: checkInData,  // Add this
+        userResponses: userResponses, // Add this
+        timestamp: new Date().toISOString()
+      })
+    });
+
+    console.log("📡 API Response status:", response.status);
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('❌ API Error:', text);
+      throw new Error(`Backend API error: ${response.status} - ${text}`);
+    }
+
+    const data = await response.json();
+    console.log("✅ API Response received");
+    return data;
+  } catch (error) {
+    console.error('❌ Fetch error:', error);
+    throw error;
+  }
+}
+  static parseChatBaseResponse(chatbaseResponse) {
+  try {
+    console.log("🔍 Parsing ChatBase response:", chatbaseResponse);
+    
+    // ChatBase returns the response in the "text" field
+    let message = chatbaseResponse.text || chatbaseResponse.content;
+    
+    if (!message) {
+      throw new Error('No message in response');
+    }
+
+    console.log("📄 Raw AI Response:", message);
+
+    // Try to extract JSON from the response
+    const jsonMatch = message.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const jsonString = jsonMatch[0];
+        console.log("📦 Extracted JSON:", jsonString);
+        const parsed = JSON.parse(jsonString);
+        
+        if (parsed.exercises && Array.isArray(parsed.exercises)) {
+          console.log("✅ Valid exercise recommendations received");
+          return parsed;
+        }
+      } catch (jsonError) {
+        console.log("❌ JSON parsing failed, using text response");
+      }
+    }
+
+    // If no valid JSON found, convert the text response to exercise format
+    console.log("🔄 Converting text response to exercise format");
+    return this.convertTextToExercises(message);
+    
+  } catch (error) {
+    console.error('❌ Error parsing ChatBase response:', error);
+    return this.getFallbackExercises();
+  }
+}
+
+static convertTextToExercises(aiText) {
+  // Create exercise objects from the AI text response
+  const exercises = [
+    {
+      id: 1,
+      title: "AI Recommended Exercise",
+      title_ar: "تمارين موصى بها من الذكاء الاصطناعي",
+      description: aiText,
+      description_ar: "توصيات مخصصة بناءً على حالتك الصحية",
+      duration_minutes: 10,
+      category: "custom",
+      difficulty: "beginner",
+      mobility_requirement: "seated"
+    }
+  ];
+
+  const safetyAdvice = [
+    "Listen to your body and take breaks as needed",
+    "Stop immediately if you experience any pain or dizziness",
+    "Consult with your healthcare provider before starting new exercises"
+  ];
+
+  return {
+    exercises: exercises,
+    safety_advice: safetyAdvice
+  };
+}
   static async getMockRecommendations(checkInData) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -143,7 +194,7 @@ export class ChatBaseAI {
     const fatigue = checkInData?.fatigue_level || 5;
     const mobility = checkInData?.mobility_level || 3;
     
-    console.log(`🎯 Generating exercises for fatigue: ${fatigue}/10, mobility: ${mobility}/5`);
+    console.log(`🎯 Generating MOCK exercises for fatigue: ${fatigue}/10, mobility: ${mobility}/5`);
 
     if (fatigue >= 7) {
       // High fatigue - gentle seated exercises only
@@ -280,79 +331,6 @@ export class ChatBaseAI {
           "Use walking aids if needed for balance"
         ]
       };
-    }
-  }
-
-  // Keep the original methods for when backend is ready
-  static buildPrompt(userData, checkInData, userResponses) {
-    const fatigue = userResponses.fatigue_level || checkInData?.fatigue_level || 5;
-    const mobility = userResponses.mobility_today || 'moderate';
-    const concerns = userResponses.specific_concerns || [];
-
-    return `
-You are Jusoor MS Exercise Assistant. Recommend safe exercises for an MS patient.
-
-Patient Context:
-- Fatigue level: ${fatigue}/10
-- Mobility today: ${mobility}
-- Specific concerns: ${concerns.join(', ') || 'none'}
-- Condition: Multiple Sclerosis
-
-Please provide:
-1. 2-3 specific, safe exercise recommendations
-2. Safety advice tailored to their current condition
-
-Format your response as JSON:
-{
-  "exercises": [
-    {
-      "title": "Exercise name",
-      "title_ar": "اسم التمرين بالعربية",
-      "description": "Brief description",
-      "description_ar": "وصف بالعربية",
-      "duration_minutes": 5-15,
-      "category": "relaxation/strength/flexibility/balance"
-    }
-  ],
-  "safety_advice": ["advice 1", "advice 2"]
-}
-
-Focus on seated exercises if fatigue >= 7 or mobility is difficult.
-`;
-  }
-
-  static async callBackendAPI(prompt) {
-    // This will be used when backend CORS is fixed
-    const response = await fetch('http://localhost:5000/api/chatbase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Backend ChatBase API error: ${response.status} - ${text}`);
-    }
-
-    return response.json();
-  }
-
-  static parseChatBaseResponse(chatbaseResponse) {
-    try {
-      const message = chatbaseResponse.message || chatbaseResponse.choices?.[0]?.message?.content;
-
-      if (!message) {
-        throw new Error('No message in response');
-      }
-
-      // Try to extract JSON
-      const jsonMatch = message.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
-
-      return this.getFallbackExercises();
-    } catch (error) {
-      console.error('Error parsing ChatBase response:', error);
-      return this.getFallbackExercises();
     }
   }
 

@@ -10,6 +10,7 @@ import { Activity, Clock, ChevronRight, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ChatBaseAI } from "../integrations/ChatBaseAI";
 
+
 export default function Exercises() {
   const [user, setUser] = useState(null);
   const [exercises, setExercises] = useState([]);
@@ -20,23 +21,35 @@ export default function Exercises() {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const navigate = useNavigate();
   const { language, isRTL } = useAccessibility();
+  const [isGeneratingExercises, setIsGeneratingExercises] = useState(false); // ADD THIS LINE
+
 
 useEffect(() => {
   const handleFocus = () => loadData(); // reload whenever user comes back to this page
   window.addEventListener("focus", handleFocus);
 
+
   loadData(); // initial load
 
   return () => window.removeEventListener("focus", handleFocus);
 }, []);
+// In your Exercises.jsx loadData function
 const loadData = async () => {
+  if (isGeneratingExercises) {
+    console.log("🔄 Already generating exercises, skipping...");
+    return;
+  }
+
   try {
     console.log("🔍 Starting loadData...");
+    setIsGeneratingExercises(true);
+    setLoading(true);
+    
     const today = format(new Date(), "yyyy-MM-dd");
     const userData = await User.me();
-    console.log("👤 User:", userData.email);
+    console.log("👤 User:", userData?.email);
     
-    // SIMPLE DIRECT CHECK - No complex logic
+    // SIMPLE DIRECT CHECK
     const localCheckIn = localStorage.getItem("currentCheckIn");
     console.log("📱 Raw localStorage:", localCheckIn);
     
@@ -59,7 +72,6 @@ const loadData = async () => {
           console.log("🎯 VALID check-in found!");
         } else {
           console.log("❌ INVALID check-in - wrong date or user");
-          // Don't clear it - just don't use it
         }
       } catch (error) {
         console.error("❌ Error parsing check-in:", error);
@@ -69,8 +81,7 @@ const loadData = async () => {
     if (!todayCheck) {
       console.log("🚫 No valid check-in for today");
       setHasCheckedInToday(false);
-      setExercises([]); // Clear any existing exercises
-      setLoading(false);
+      setExercises([]);
       return;
     }
 
@@ -99,8 +110,10 @@ const loadData = async () => {
     setExercises([]);
   } finally {
     setLoading(false);
+    setIsGeneratingExercises(false);
   }
 };
+
 const handleExerciseAssistantClick = () => {
   if (!hasCheckedInToday) {
     navigate("/check-in-form");  // Direct to form instead of check-in page
