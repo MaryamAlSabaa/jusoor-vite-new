@@ -69,7 +69,8 @@ Jusoor is a modern web application designed to support MS patients in managing t
 Pull requests and suggestions are welcome! Please follow best practices and keep code modular.
 
 ## License
-MIT
+- Source code is licensed under the MIT License (see `LICENSE`).
+- Documentation and other non-code assets are licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0) (see `LICENSE-docs`).
 
 ---
 Made with love for MS patients 🦋
